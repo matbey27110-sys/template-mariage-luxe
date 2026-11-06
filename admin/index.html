@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Espace mariés</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Connexion -->
+<div class="login" hidden>
+  <form class="login-card">
+    <p class="kicker">Espace mariés</p>
+    <h1>Connexion</h1>
+    <label>Email<input type="email" name="email" required autocomplete="username"></label>
+    <label>Mot de passe<input type="password" name="password" required autocomplete="current-password"></label>
+    <p class="error" role="alert"></p>
+    <button class="btn btn-gold" type="submit">Se connecter</button>
+  </form>
+</div>
+
+<!-- Application -->
+<div class="app" hidden>
+  <aside class="side">
+    <div class="brand">
+      <span class="brand-mono"></span>
+      <span class="brand-sub">Espace mariés</span>
+    </div>
+    <nav class="tabs"></nav>
+    <div class="side-foot">
+      <a class="link" href="../" target="_blank" rel="noopener">Voir le site ↗</a>
+      <button class="link logout" type="button">Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="bar">
+      <div>
+        <h1 class="bar-title"></h1>
+        <p class="bar-hint"></p>
+      </div>
+      <div class="bar-actions">
+        <span class="save-state"></span>
+        <button class="btn btn-gold save" type="button" disabled>Enregistrer</button>
+      </div>
+    </header>
+    <p class="demo-banner" hidden>Mode démo : les modifications sont enregistrées dans ce navigateur uniquement. Configurez Supabase dans <code>js/config.js</code> pour la mise en ligne.</p>
+    <div class="panel"></div>
+  </main>
+</div>
+
+<div class="toast" role="status"></div>
+<input type="file" class="file-picker" accept="image/*" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/default-content.js"></script>
+<script src="../js/store.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

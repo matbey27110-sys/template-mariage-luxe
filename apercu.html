@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aperçu — Nuit de Gala</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Italiana&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Jost:wght@300;400;500&family=Pinyon+Script&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400&family=Gilda+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --noir: #0F0B0C;
+    --bordeaux-nuit: #3A0A0E;
+    --bordeaux: #5E0B12;
+    --grenat: #8A1C24;
+    --or: #C8A86B;
+    --or-pale: #E6CF9C;
+    --ivoire: #F4EDE2;
+    --lin: #E9E0D2;
+    --taupe: #8B7A69;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--noir); color: var(--ivoire); font-family: 'Jost', sans-serif; font-weight: 300; }
+  .label { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--or); }
+  section { padding: 96px 24px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh; display: grid; place-items: center; text-align: center; position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(200,168,107,.22), transparent 55%),
+      radial-gradient(ellipse at 50% 120%, var(--bordeaux) 0%, transparent 60%),
+      var(--noir);
+  }
+  .hero::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(230,207,156,.5) 1px, transparent 1px); background-size: 46px 46px; opacity: .08; pointer-events: none; }
+  .hero h1 { font-family: 'Italiana', serif; font-weight: 400; font-size: clamp(48px, 9vw, 120px); line-height: 1; letter-spacing: .02em; margin: 24px 0; }
+  .hero h1 em { font-family: 'Cormorant Garamond', serif; color: var(--or); font-style: italic; }
+  .date { font-size: 15px; letter-spacing: .4em; }
+  .place { font-size: 11px; letter-spacing: .3em; margin-top: 10px; color: var(--lin); }
+  .countdown { display: flex; gap: 28px; justify-content: center; margin: 40px 0 36px; }
+  .countdown div { min-width: 64px; }
+  .countdown b { display: block; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: 38px; color: var(--ivoire); }
+  .countdown span { font-size: 10px; letter-spacing: .3em; color: var(--taupe); text-transform: uppercase; }
+  .btn { display: inline-block; padding: 15px 34px; border: 1px solid var(--or); color: var(--or); text-decoration: none; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; transition: .4s; }
+  .btn:hover { background: var(--or); color: var(--noir); }
+  .ornament { font-family: 'Pinyon Script', cursive; color: var(--or); font-size: 34px; margin-top: 18px; }
+
+  /* Palette */
+  .light { background: var(--lin); color: var(--noir); }
+  .light .label { color: var(--grenat); }
+  h2 { font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(30px, 5vw, 52px); text-transform: uppercase; margin: 14px 0 48px; line-height: 1.1; }
+  h2 em { font-family: 'Cormorant Garamond', serif; text-transform: none; font-style: italic; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
+  .sw { background: #fff; padding: 8px 8px 14px; box-shadow: 0 1px 0 rgba(0,0,0,.05); }
+  .sw i { display: block; height: 120px; margin-bottom: 12px; }
+  .sw strong { display: block; font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; }
+  .sw small { font-size: 12px; color: var(--taupe); letter-spacing: .08em; }
+
+  /* Typo */
+  .typo { display: grid; gap: 28px; }
+  .card { border: 1px solid rgba(200,168,107,.3); padding: 44px 36px; }
+  .card .names { font-size: clamp(38px, 6vw, 68px); line-height: 1.05; margin: 18px 0 12px; }
+  .card .accent { font-size: 28px; margin-bottom: 18px; }
+  .card p { font-size: 15px; line-height: 1.8; max-width: 620px; color: var(--lin); }
+  .card .meta { font-size: 12px; color: var(--taupe); margin-top: 22px; letter-spacing: .05em; }
+  .a .names { font-family: 'Bodoni Moda', serif; text-transform: uppercase; }
+  .a .names span { font-family: 'Pinyon Script', cursive; text-transform: none; color: var(--or); }
+  .a .accent { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--or-pale); }
+  .a p { font-family: 'Jost', sans-serif; }
+  .b { background: var(--bordeaux); border-color: transparent; }
+  .b .names { font-family: 'DM Serif Display', serif; }
+  .b .accent { font-family: 'DM Serif Display', serif; font-style: italic; color: var(--or-pale); }
+  .b p { font-family: 'Inter', sans-serif; }
+  .c { background: var(--ivoire); color: var(--noir); border-color: transparent; }
+  .c .names { font-family: 'Gilda Display', serif; text-transform: uppercase; }
+  .c .names em { font-family: 'Cormorant Garamond', serif; text-transform: none; color: var(--grenat); }
+  .c .accent { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--grenat); }
+  .c p { color: #3d3330; font-family: 'Jost', sans-serif; }
+
+  /* Footer */
+  footer { position: relative; height: 70vh; min-height: 420px; display: grid; place-items: center; overflow: hidden;
+    background: linear-gradient(135deg, var(--bordeaux-nuit), var(--noir) 45%, var(--bordeaux) 100%); }
+  footer::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 25% 40%, rgba(200,168,107,.35), transparent 30%), radial-gradient(circle at 75% 65%, rgba(138,28,36,.7), transparent 35%); }
+  .glass { position: relative; width: 260px; height: 260px; border-radius: 50%; display: grid; place-items: center; text-align: center;
+    background: rgba(15,11,12,.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(230,207,156,.35); }
+  .mono { font-family: 'Italiana', serif; font-size: 64px; color: var(--ivoire); }
+  .mono span { color: var(--or); font-family: 'Cormorant Garamond', serif; font-weight: 300; margin: 0 6px; }
+  .glass small { display: block; font-size: 10px; letter-spacing: .35em; color: var(--or-pale); margin-top: 6px; }
+
+  @media (max-width: 600px) {
+    section { padding: 72px 16px; }
+    .countdown { gap: 14px; }
+    .countdown b { font-size: 28px; }
+    .card { padding: 32px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div>
+    <p class="label">Bienvenue à notre célébration</p>
+    <h1>ALESSANDRA <em>&amp;</em><br>LORENZO</h1>
+    <p class="date">14 · 06 · 2027</p>
+    <p class="place">LAC DE CÔME, ITALIE</p>
+    <div class="countdown" id="cd">
+      <div><b data-k="j">0</b><span>Jours</span></div>
+      <div><b data-k="h">0</b><span>Heures</span></div>
+      <div><b data-k="m">0</b><span>Minutes</span></div>
+      <div><b data-k="s">0</b><span>Secondes</span></div>
+    </div>
+    <a class="btn" href="#palette">Confirmer ma présence</a>
+    <div class="ornament">~ ❦ ~</div>
+  </div>
+</section>
+
+<section class="light" id="palette">
+  <div class="wrap">
+    <p class="label">Direction artistique</p>
+    <h2>Nuit de <em>Gala</em></h2>
+    <div class="swatches">
+      <div class="sw"><i style="background:#0F0B0C"></i><strong>Noir velours</strong><small>#0F0B0C</small></div>
+      <div class="sw"><i style="background:#3A0A0E"></i><strong>Bordeaux nuit</strong><small>#3A0A0E</small></div>
+      <div class="sw"><i style="background:#5E0B12"></i><strong>Bordeaux Maison</strong><small>#5E0B12</small></div>
+      <div class="sw"><i style="background:#8A1C24"></i><strong>Grenat</strong><small>#8A1C24</small></div>
+      <div class="sw"><i style="background:#C8A86B"></i><strong>Or champagne</strong><small>#C8A86B</small></div>
+      <div class="sw"><i style="background:#E6CF9C"></i><strong>Or pâle</strong><small>#E6CF9C</small></div>
+      <div class="sw"><i style="background:#F4EDE2;outline:1px solid #ddd"></i><strong>Ivoire</strong><small>#F4EDE2</small></div>
+      <div class="sw"><i style="background:#E9E0D2;outline:1px solid #ddd"></i><strong>Lin</strong><small>#E9E0D2</small></div>
+      <div class="sw"><i style="background:#8B7A69"></i><strong>Taupe</strong><small>#8B7A69</small></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="label">Typographies</p>
+    <h2>Trois <em>options</em></h2>
+    <div class="typo">
+      <div class="card a">
+        <p class="label">Option A — recommandée</p>
+        <div class="names">Alessandra <span>&amp;</span> Lorenzo</div>
+        <div class="accent">Timeless elegance, une promesse pour la vie</div>
+        <p>Nous avons hâte de partager avec vous ce jour si précieux. Retrouvez ici le programme, les lieux et toutes les informations pratiques pour célébrer avec nous.</p>
+        <div class="meta">Bodoni Moda · Cormorant Garamond Italic · Jost · Pinyon Script (&amp;)</div>
+      </div>
+      <div class="card b">
+        <p class="label">Option B — éditorial, style Maison Rouge</p>
+        <div class="names">Alessandra &amp; Lorenzo</div>
+        <div class="accent">Notre histoire</div>
+        <p>Nous avons hâte de partager avec vous ce jour si précieux. Retrouvez ici le programme, les lieux et toutes les informations pratiques pour célébrer avec nous.</p>
+        <div class="meta">DM Serif Display · Inter</div>
+      </div>
+      <div class="card c">
+        <p class="label" style="color:var(--grenat)">Option C — esprit Leo Spin (équivalent gratuit d'Ivy Presto)</p>
+        <div class="names">Expertise <em>and</em> Artistry</div>
+        <div class="accent">Unforgettable moments</div>
+        <p>Nous avons hâte de partager avec vous ce jour si précieux. Retrouvez ici le programme, les lieux et toutes les informations pratiques pour célébrer avec nous.</p>
+        <div class="meta">Gilda Display · Cormorant Garamond Italic · Jost — version premium : Ivy Presto / Canela</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="glass">
+    <div>
+      <div class="mono">A<span>|</span>L</div>
+      <small>14 · 06 · 2027</small>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Démo : date + heure facultative, comme dans le futur back-office
+  const target = new Date('2027-06-14T16:00:00');
+  const els = {};
+  document.querySelectorAll('#cd b').forEach(b => els[b.dataset.k] = b);
+  function tick() {
+    let d = Math.max(0, target - Date.now()) / 1000;
+    els.j.textContent = Math.floor(d / 86400);
+    els.h.textContent = String(Math.floor(d % 86400 / 3600)).padStart(2, '0');
+    els.m.textContent = String(Math.floor(d % 3600 / 60)).padStart(2, '0');
+    els.s.textContent = String(Math.floor(d % 60)).padStart(2, '0');
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

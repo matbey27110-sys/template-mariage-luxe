@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notre mariage</title>
+<meta name="description" content="Toutes les informations de notre mariage et la confirmation de présence.">
+<meta name="theme-color" content="#0B0A09">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="assets/fonts/Blasse.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  // Visite suivante : la photo d'accueil se télécharge tout de suite, sans attendre le contenu
+  try { var f = localStorage.getItem('mariage.heroFond'); if (f) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = f; document.head.appendChild(l); } } catch (e) {}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:," data-favicon>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body class="is-loading">
+
+<!-- Animation d'ouverture : logo (initiales) + prénoms et date, repris de l'admin -->
+<div class="intro" id="intro" hidden aria-hidden="true">
+  <div class="intro-in">
+    <div class="intro-logo" data-mono></div>
+    <p class="intro-sub"><span data-c="couple.prenom1"></span> &amp; <span data-c="couple.prenom2"></span><br><span data-c="datePoints"></span></p>
+  </div>
+</div>
+
+<!-- En-tête -->
+<header class="topbar">
+  <a href="#accueil" class="mono-link" aria-label="Retour en haut" data-mono></a>
+  <button class="burger" aria-label="Ouvrir le menu" aria-expanded="false"><span></span><span></span></button>
+</header>
+
+<nav class="menu" aria-hidden="true">
+  <ul>
+    <li><a href="#accueil">Accueil</a></li>
+    <li data-section-link="histoire"><a href="#histoire">Notre histoire</a></li>
+    <li data-section-link="programme"><a href="#programme">Programme</a></li>
+    <li data-section-link="lieux"><a href="#lieux">Les lieux</a></li>
+    <li data-section-link="dressCode"><a href="#dresscode">Dress code</a></li>
+    <li data-section-link="galerie"><a href="#galerie">Galerie</a></li>
+    <li data-section-link="rsvp"><a href="#rsvp">RSVP</a></li>
+  </ul>
+  <p class="menu-date" data-c="dateLongue"></p>
+</nav>
+
+<main>
+  <!-- Accueil -->
+  <section class="hero" id="accueil">
+    <div class="hero-bg" data-bg="hero.fond"></div>
+    <div class="hero-veil"></div>
+    <div class="hero-content">
+      <p class="label reveal" data-c="hero.surtitre"></p>
+      <h1 class="names reveal">
+        <span><span data-c="couple.prenom1"></span> <em class="amp">&amp;</em></span>
+        <span data-c="couple.prenom2"></span>
+      </h1>
+      <p class="hero-date reveal" data-c="datePoints"></p>
+      <p class="hero-place reveal" data-c="hero.lieu"></p>
+      <div class="countdown reveal" aria-live="polite"></div>
+      <a href="#rsvp" class="btn btn-gold reveal" data-c="hero.bouton" data-rsvp-link></a>
+      <svg class="flourish reveal" viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6h28M44 6h28" stroke="currentColor" stroke-width=".7"/><path d="M36 1.5 40.5 6 36 10.5 31.5 6z" fill="none" stroke="currentColor" stroke-width=".7"/></svg>
+    </div>
+    <a href="#histoire" class="scroll-hint" aria-label="Défiler"><span>Défiler</span><i></i></a>
+  </section>
+
+  <!-- Notre histoire : photo plein écran -->
+  <section class="fullbleed" id="histoire" data-section="histoire">
+    <div class="fullbleed-bg parallax" data-bg="histoire.photoPleinEcran"></div>
+    <div class="fullbleed-content">
+      <p class="label reveal" data-c="histoire.surtitre"></p>
+      <h2 class="display reveal"><span data-c="histoire.titre"></span> <em data-c="histoire.titreItalique"></em></h2>
+    </div>
+  </section>
+
+  <section class="ivory story" data-section="histoire">
+    <div class="wrap">
+      <div class="trio">
+        <figure class="frame reveal"><img alt="" loading="lazy" decoding="async" data-src="histoire.photos.0"></figure>
+        <figure class="frame frame-tall reveal"><img alt="" loading="lazy" decoding="async" data-src="histoire.photos.1"></figure>
+        <figure class="frame reveal"><img alt="" loading="lazy" decoding="async" data-src="histoire.photos.2"></figure>
+      </div>
+      <p class="story-text reveal" data-c="histoire.texte"></p>
+      <svg class="ornament reveal" viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6h28M44 6h28" stroke="currentColor" stroke-width=".7"/><path d="M36 1.5 40.5 6 36 10.5 31.5 6z" fill="none" stroke="currentColor" stroke-width=".7"/></svg>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track"></div></div>
+
+  <!-- Programme -->
+  <section class="dark" id="programme" data-section="programme">
+    <div class="wrap narrow">
+      <p class="label reveal">Le déroulé</p>
+      <h2 class="title reveal" data-c="programme.titre"></h2>
+      <ol class="timeline"></ol>
+    </div>
+  </section>
+
+  <!-- Le grand jour : photo plein écran -->
+  <section class="fullbleed fullbleed-low" data-section="grandJour">
+    <div class="fullbleed-bg parallax" data-bg="grandJour.photo"></div>
+    <div class="fullbleed-content">
+      <p class="label reveal" data-c="grandJour.surtitre"></p>
+      <h2 class="display reveal"><span data-c="grandJour.titre"></span> <em data-c="grandJour.titreItalique"></em></h2>
+      <p class="fullbleed-text reveal" data-c="grandJour.texte"></p>
+    </div>
+  </section>
+
+  <!-- Lieux -->
+  <section class="ivory" id="lieux" data-section="lieux">
+    <div class="wrap">
+      <p class="label reveal">Où nous retrouver</p>
+      <h2 class="title reveal" data-c="lieux.titre"></h2>
+      <div class="places"></div>
+    </div>
+  </section>
+
+  <!-- Dress code -->
+  <section class="dark" id="dresscode" data-section="dressCode">
+    <div class="wrap narrow center">
+      <p class="label reveal" data-c="dressCode.titre"></p>
+      <h2 class="title reveal"><em data-c="dressCode.sousTitre"></em></h2>
+      <p class="lead reveal" data-c="dressCode.texte"></p>
+      <div class="swatches reveal"></div>
+    </div>
+  </section>
+
+  <!-- Galerie -->
+  <section class="ivory" id="galerie" data-section="galerie">
+    <div class="wrap">
+      <p class="label reveal">Souvenirs</p>
+      <h2 class="title reveal" data-c="galerie.titre"></h2>
+      <div class="gallery"></div>
+    </div>
+  </section>
+
+  <!-- RSVP -->
+  <section class="dark rsvp" id="rsvp" data-section="rsvp">
+    <div class="wrap narrow">
+      <p class="label reveal center">RSVP</p>
+      <h2 class="title reveal center" data-c="rsvp.titre"></h2>
+      <p class="lead reveal center" data-c="rsvp.texte"></p>
+      <div class="rsvp-body reveal"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer : photo + monogramme sur verre dépoli -->
+<footer class="footer">
+  <div class="footer-bg" data-bg="footer.photo"></div>
+  <div class="footer-veil"></div>
+  <div class="footer-glass reveal" data-seal></div>
+  <div class="footer-bottom">
+    <p class="footer-msg" data-c="footer.message"></p>
+    <button class="link-btn" type="button" data-ics>Ajouter à mon calendrier</button>
+    <p class="credit">Site réalisé par MB Design</p>
+  </div>
+</footer>
+
+<a href="#rsvp" class="float-rsvp" data-rsvp-link aria-label="Répondre à l'invitation">RSVP</a>
+
+<div class="lightbox" aria-hidden="true"><button aria-label="Fermer">×</button><img alt=""></div>
+
+<!-- Animation d'ouverture -->
+<script>
+(function () {
+  var el = document.getElementById('intro');
+  if (!el) return;
+  var DUREE = 3200;            // temps avant que le voile se lève (ms)
+  var UNE_FOIS = true;         // true = une seule fois par visite ; false = à chaque chargement
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var dejaVu = false;
+  try { dejaVu = sessionStorage.getItem('intro-vue') === '1'; } catch (e) {}
+  if (reduce || (UNE_FOIS && dejaVu)) return;
+  try { sessionStorage.setItem('intro-vue', '1'); } catch (e) {}
+
+  el.hidden = false;
+  document.body.classList.add('intro-on');
+
+  var ferme = false;
+  function fermer() {
+    if (ferme) return; ferme = true;
+    el.classList.add('done');
+    document.body.classList.remove('intro-on');
+    setTimeout(function () { el.hidden = true; }, 1150);
+  }
+  el.addEventListener('click', fermer);   // un clic passe l'ouverture
+  setTimeout(fermer, DUREE);
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/default-content.js"></script>
+<script src="js/store.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
