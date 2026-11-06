@@ -89,6 +89,8 @@ body::after {
 .display em { color: var(--or-pale); }
 /* Notre histoire et Le grand jour : le mot en accent (« inoubliable », « jour ») en Blasse, droit */
 #histoire .display em, [data-section="grandJour"] .display em { font-family: var(--f-logo); font-style: normal; }
+/* Notre histoire : « inoubliable » en capitales comme « UNE RENCONTRE », lettres détachées (sans ligatures de Blasse) */
+#histoire .display em { text-transform: uppercase; letter-spacing: inherit; font-variant-ligatures: none; font-feature-settings: "kern", "liga" 0, "dlig" 0, "calt" 0, "swsh" 0; }
 /* Le grand jour : « jour » identique à « LE GRAND » (capitales, même couleur) */
 [data-section="grandJour"] .display em { text-transform: uppercase; color: inherit; letter-spacing: inherit; }
 .lead { font-family: var(--f-display); font-style: italic; font-size: var(--t-lead); line-height: 1.6; color: var(--lin); }
@@ -98,12 +100,22 @@ body::after {
 .btn {
   display: inline-block; padding: 17px 40px; text-decoration: none; border: 1px solid var(--or); border-radius: var(--radius);
   font-family: var(--f-sans); font-size: var(--t-label); font-weight: 400; letter-spacing: .3em; text-transform: uppercase;
-  background: transparent; transition: background .5s var(--ease), color .5s var(--ease), border-color .5s;
+  background: transparent; transition: color .7s var(--ease), border-color .7s var(--ease);
+  position: relative; overflow: hidden; isolation: isolate; --btn-fill: var(--or);
 }
+/* Survol : la couleur se dépose progressivement de gauche à droite, puis se retire vers la droite */
+.btn::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; background: var(--btn-fill);
+  transform: scaleX(0); transform-origin: right center; transition: transform .8s var(--ease);
+}
+.btn:hover::before, .btn:focus-visible::before { transform: scaleX(1); transform-origin: left center; }
+/* Le texte change de couleur une fois le remplissage bien engagé, pour rester lisible pendant le balayage */
+.btn:hover, .btn:focus-visible { transition: color .5s var(--ease) .2s, border-color .7s var(--ease); }
+.btn:disabled::before { transform: scaleX(0); }
 .btn-gold { color: var(--or-pale); }
-.btn-gold:hover { background: var(--or); color: var(--noir); }
-.btn-solid { background: var(--or); color: var(--noir); }
-.btn-solid:hover { background: var(--or-pale); border-color: var(--or-pale); }
+.btn-gold:hover { color: var(--noir); }
+.btn-solid { background: var(--or); color: var(--noir); --btn-fill: var(--or-pale); }
+.btn-solid:hover { border-color: var(--or-pale); }
 .btn:disabled { opacity: .5; cursor: wait; }
 
 /* ---------- Sections ---------- */
@@ -268,8 +280,8 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 .place h3 { font-family: var(--f-display); font-weight: 400; font-size: var(--t-h3); line-height: 1.25; }
 .place address { font-style: normal; color: var(--taupe); font-size: 15px; }
 .place .info { font-family: var(--f-display); font-style: italic; font-size: 16px; }
-.place .btn { margin-top: 14px; color: var(--encre); border-color: var(--encre); }
-.place .btn:hover { background: var(--encre); color: var(--ivoire); }
+.place .btn { margin-top: 14px; color: var(--encre); border-color: var(--encre); --btn-fill: var(--encre); }
+.place .btn:hover { color: var(--ivoire); }
 
 /* ---------- Dress code ---------- */
 .swatches { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 44px; }
