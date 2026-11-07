@@ -137,16 +137,22 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
      et son fond la recouvre, au lieu de laisser voir la page défiler derrière l'heure. */
   --safe-top: env(safe-area-inset-top, 0px);
   padding: calc(22px + var(--safe-top)) max(var(--gutter), env(safe-area-inset-right, 0px)) 22px max(var(--gutter), env(safe-area-inset-left, 0px));
-  transition: background .5s, padding .5s;
+  transition: background-color .5s;
 }
-.topbar.scrolled { background: rgba(11, 10, 9, .82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-top: calc(14px + var(--safe-top)); padding-bottom: 14px; }
-/* iPhone / iPad (Safari iOS 26) : la zone de l'heure prend la couleur de l'élément fixé en haut,
-   à condition qu'il ait un fond plein et pas de flou (le flou empêche Safari de lire la couleur).
-   On remplace donc le verre dépoli par le noir du site, uniquement sur iOS. */
+/* Au défilement, l'en-tête garde exactement la même taille (pas de saut) et devient en verre fumé.
+   - La couleur translucide est posée sur l'en-tête lui-même : c'est elle que Safari iOS 26 reprend
+     pour teinter la zone de l'heure.
+   - Le flou est sur un calque intérieur (::before), pour ne pas empêcher Safari de lire cette couleur. */
+.topbar.scrolled { background-color: rgba(11, 10, 9, .82); }
+.topbar::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  opacity: 0; transition: opacity .5s;
+}
+.topbar.scrolled::before { opacity: 1; }
 @supports (-webkit-touch-callout: none) {
-  .topbar.scrolled { background: var(--noir); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  /* Le grain est un calque fixé transparent posé AU-DESSUS de l'en-tête : Safari le prenait pour
-     l'élément du haut et ne trouvait aucune couleur. Invisible sur un écran de téléphone : on le retire. */
+  /* iPhone / iPad : le grain est un calque fixé transparent posé AU-DESSUS de l'en-tête ; Safari le prenait
+     pour l'élément du haut et ne trouvait aucune couleur. Invisible sur un écran de téléphone : on le retire. */
   body::after { display: none; }
 }
 /* Monogramme : initiales séparées par un filet doré (pas un caractère « | ») */
@@ -176,7 +182,8 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
 .menu.open { display: flex; opacity: 1; }
 @starting-style { .menu.open { opacity: 0; } .menu.open a { transform: translateY(100%); } }
 /* Menu ouvert : l en-tête devient transparent, seuls le monogramme et la croix restent */
-body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+body:has(.menu.open) .topbar { background-color: transparent; }
+body:has(.menu.open) .topbar::before { opacity: 0; }
 .menu ul { list-style: none; padding: 0; margin: 0; text-align: center; }
 .menu li { overflow: hidden; }
 .menu a {
