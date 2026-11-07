@@ -271,6 +271,17 @@
   } else {
     const opts = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? 'personnes' : 'personne'}</option>`).join('');
     const moments = (R.moments || []).map(mo => `<label class="choice"><input type="checkbox" name="moments" value="${esc(mo)}" checked><span>${esc(mo)}</span></label>`).join('');
+    // Questions personnalisées (admin > Formulaire RSVP) : texte libre ou liste déroulante
+    const questions = (R.questions || []).map((q, i) => ({ ...q, i, options: (q.options || []).filter(o => String(o).trim()) }))
+      .filter(q => String(q.question || '').trim() && (q.type !== 'liste' || q.options.length));
+    const questionHtml = q => {
+      const label = `<span>${esc(q.question)}</span>`; // comme les autres champs : pas de marque, le message d'erreur guide
+      return q.type === 'liste'
+        ? `<label class="field">${label}<select data-q="${q.i}"><option value="">Choisir…</option>${q.options.map(o => `<option>${esc(o)}</option>`).join('')}</select></label>`
+        : `<label class="field">${label}<input type="text" data-q="${q.i}" maxlength="500"></label>`;
+    };
+    const qPresents = questions.filter(q => !q.pourTous).map(questionHtml).join('');
+    const qTous = questions.filter(q => q.pourTous).map(questionHtml).join('');
     body.innerHTML = `
       ${invite ? `<p class="hello">Chère, cher <em>${esc(invite.nom)}</em></p>` : ''}
       <form class="form" novalidate>
@@ -281,16 +292,18 @@
             <label class="choice"><input type="radio" name="present" value="non"><span>À regret</span></label>
           </div>
         </fieldset>
-        <div class="attending" hidden>
+        <div class="attending fold is-closed" inert><div class="fold-in">
           <div class="cols">
             <label class="field"><span>Nombre de personnes (vous inclus)</span><select name="nb_personnes">${opts}</select></label>
             ${R.demanderEnfants ? `<label class="field"><span>Dont enfants</span><input type="number" name="enfants" min="0" max="${max}" value="0"></label>` : ''}
           </div>
-          <label class="field accomp" hidden><span>Prénoms des accompagnants</span><input type="text" name="accompagnants" placeholder="Ex. Marie, Paul"></label>
+          <div class="accomp fold is-closed" inert><div class="fold-in"><label class="field"><span>Prénoms des accompagnants</span><input type="text" name="accompagnants" placeholder="Ex. Marie, Paul"></label></div></div>
           ${moments ? `<fieldset class="field"><legend>Vous serez là pour</legend><div class="checks">${moments}</div></fieldset>` : ''}
           <label class="field"><span>Régime alimentaire / allergies</span><input type="text" name="regime" placeholder="Végétarien, sans gluten…"></label>
           ${R.demanderChanson ? `<label class="field"><span>Une chanson pour la piste de danse</span><input type="text" name="chanson" placeholder="Titre — artiste"></label>` : ''}
-        </div>
+          ${qPresents}
+        </div></div>
+        ${qTous}
         <div class="cols">
           <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email"></label>
           <label class="field"><span>Téléphone</span><input type="tel" name="telephone" autocomplete="tel"></label>
@@ -301,9 +314,24 @@
       </form>`;
 
     const form = $('form', body), att = $('.attending', form), err = $('.form-error', form);
+    // Volet : le bloc s'ouvre / se referme en douceur (voir .fold dans site.css) ;
+    // fermé, il est « inert » : ni clavier ni lecteur d'écran n'y entrent
+    const fold = (el, open) => {
+      if (open === !el.classList.contains('is-closed')) return;
+      el.inert = !open;
+      el.classList.remove('is-done');
+      if (reduce) { el.classList.toggle('is-closed', !open); el.style.height = ''; if (open) el.classList.add('is-done'); return; }
+      if (open) { el.classList.remove('is-closed'); el.style.height = '0px'; void el.offsetHeight; el.style.height = el.scrollHeight + 'px'; }
+      else { el.style.height = el.scrollHeight + 'px'; void el.offsetHeight; el.classList.add('is-closed'); el.style.height = '0px'; }
+    };
+    // Une fois ouvert, le volet reprend une hauteur libre (son contenu peut encore changer : accompagnants…)
+    $$('.fold', form).forEach(el => el.addEventListener('transitionend', e => {
+      if (e.target !== el || e.propertyName !== 'height' || el.classList.contains('is-closed')) return;
+      el.style.height = ''; el.classList.add('is-done');
+    }));
     const sync = () => {
-      att.hidden = form.present.value !== 'oui';
-      $('.accomp', form).hidden = Number(form.nb_personnes.value) < 2;
+      fold(att, form.present.value === 'oui');
+      fold($('.accomp', form), Number(form.nb_personnes.value) >= 2);
     };
     form.addEventListener('change', sync);
 
@@ -313,6 +341,11 @@
       if (form.nom.value.trim().length < 2) return (err.textContent = 'Merci d’indiquer votre nom.');
       if (!form.present.value) return (err.textContent = 'Merci de nous dire si vous serez présent·e.');
       const yes = form.present.value === 'oui';
+      // Seules les questions visibles comptent (celles réservées aux présents sont masquées si « À regret »)
+      const asked = questions.filter(q => yes || q.pourTous);
+      const valueOf = q => $(`[data-q="${q.i}"]`, form).value.trim();
+      const missing = asked.find(q => q.obligatoire && !valueOf(q));
+      if (missing) return (err.textContent = `Merci de répondre à : « ${missing.question} »`);
       const payload = {
         invite_id: invite?.id || null,
         nom: form.nom.value.trim(),
@@ -326,6 +359,7 @@
         moments: yes ? $$('input[name="moments"]:checked', form).map(i => i.value) : [],
         chanson: yes && form.chanson ? form.chanson.value.trim() : '',
         message: form.message.value.trim(),
+        reponses: asked.map(q => ({ question: q.question.trim(), reponse: valueOf(q) })).filter(a => a.reponse),
       };
       const btn = $('button[type="submit"]', form);
       btn.disabled = true; btn.textContent = 'Envoi…';

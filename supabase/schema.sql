@@ -35,8 +35,10 @@ create table if not exists public.rsvps (
   moments text[] not null default '{}',
   chanson text,
   message text,
+  reponses jsonb not null default '[]'::jsonb, -- questions personnalisées : [{question, reponse}]
   created_at timestamptz not null default now()
 );
+alter table public.rsvps add column if not exists reponses jsonb not null default '[]'::jsonb;
 
 -- ---------- Sécurité (RLS) ----------
 alter table public.site    enable row level security;
@@ -94,7 +96,7 @@ begin
   end if;
 
   insert into rsvps (invite_id, nom, email, telephone, present, nb_personnes, accompagnants,
-                     enfants, regime, moments, chanson, message)
+                     enfants, regime, moments, chanson, message, reponses)
   values (
     v_invite,
     left(p->>'nom', 120),
@@ -107,7 +109,10 @@ begin
     left(p->>'regime', 300),
     coalesce(array(select jsonb_array_elements_text(p->'moments')), '{}'),
     left(p->>'chanson', 200),
-    left(p->>'message', 1500)
+    left(p->>'message', 1500),
+    case when jsonb_typeof(p->'reponses') = 'array' and jsonb_array_length(p->'reponses') <= 30
+              and length((p->'reponses')::text) <= 8000
+         then p->'reponses' else '[]'::jsonb end
   )
   returning id into v_id;
   return v_id;

@@ -325,7 +325,9 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
     0 24px 48px -12px rgba(0, 0, 0, .55),     /* élévation */
     0 60px 120px -30px rgba(0, 0, 0, .7);     /* ombre portée lointaine */
 }
-.form { display: grid; gap: 28px; }
+/* Colonne flexible (et non grille) : une ligne de grille ne peut pas être négative,
+   alors qu'en flex la marge négative d'un volet fermé referme bien l'espacement */
+.form { display: flex; flex-direction: column; gap: 28px; }
 .field { display: grid; gap: 10px; }
 .field > span, .field legend { font-size: var(--t-label); font-weight: 400; letter-spacing: .26em; text-transform: uppercase; color: var(--or); padding: 0; }
 .field input[type="text"], .field input[type="email"], .field input[type="tel"], .field input[type="number"],
@@ -336,6 +338,7 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 }
 .field select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--or) 50%), linear-gradient(-45deg, transparent 50%, var(--or) 50%); background-position: right 6px center, right 0 center; background-size: 6px 6px; background-repeat: no-repeat; }
 .field select option { background: var(--noir); color: var(--ivoire); }
+.field select:has(option[value=""]:checked) { color: rgba(244,237,226,.35); } /* « Choisir… » grisé comme un texte d'exemple */
 .field textarea { resize: vertical; min-height: 90px; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--or-pale); }
 .field input::placeholder, .field textarea::placeholder { color: rgba(244,237,226,.35); }
@@ -352,10 +355,18 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
 .checks { display: flex; flex-wrap: wrap; gap: 10px; }
 .checks .choice span { padding: 10px 18px; font-size: 15px; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-.attending { display: grid; gap: 28px; }
-.attending[hidden], .field[hidden] { display: none; }
+/* Volet du formulaire : les champs qui dépendent d'une réponse se déplient / se replient en douceur.
+   La hauteur est animée par site.js (mesure du contenu) ; la marge négative absorbe
+   l'espacement de la grille (28px) pour qu'un volet fermé ne laisse aucun trou. */
+.fold { overflow: hidden; transition: height .8s var(--ease), margin-top .8s var(--ease); }
+.fold.is-done { overflow: visible; } /* ouvert : les contours de focus ne sont plus coupés */
+.fold.is-closed { height: 0; margin-top: -28px; visibility: hidden; transition: height .7s var(--ease), margin-top .7s var(--ease), visibility 0s .7s; }
+.fold-in { transition: opacity .6s var(--ease) .15s, transform .8s var(--ease); }
+.fold.is-closed > .fold-in { opacity: 0; transform: translateY(-14px); transition: opacity .35s var(--ease), transform .7s var(--ease); }
+.attending > .fold-in { display: flex; flex-direction: column; gap: 28px; }
+.field[hidden] { display: none; }
 .form-error { color: #E9A3A3; font-size: 14px; min-height: 1em; }
-.form .btn { justify-self: center; margin-top: 8px; padding-inline: 54px; }
+.form .btn { align-self: center; margin-top: 8px; padding-inline: 54px; }
 .rsvp-done, .rsvp-closed { text-align: center; padding: 40px 0; }
 .rsvp-done h3, .rsvp-closed h3 { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: clamp(30px, 4vw, 42px); color: var(--or-pale); }
 .rsvp-done p, .rsvp-closed p { margin-top: 14px; color: var(--lin); }

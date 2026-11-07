@@ -94,6 +94,13 @@
         ['rsvp.demanderChanson', 'Demander une chanson', 'toggle'],
         ['rsvp.moments', 'Moments proposés (cases à cocher)', 'strings'],
       ] },
+      { title: 'Questions personnalisées', fields: [['rsvp.questions', '', 'list', '', [
+        ['question', 'Question', 'text', 'Ex. Aurez-vous besoin de la navette ?'],
+        ['type', 'Type de réponse', 'select', '', [['texte', 'Texte libre'], ['liste', 'Liste déroulante']]],
+        ['options', 'Choix de la liste', 'strings', 'Un champ par choix proposé à l’invité', null, null, it => it.type === 'liste'],
+        ['obligatoire', 'Réponse obligatoire', 'toggle'],
+        ['pourTous', 'Poser aussi aux personnes absentes', 'toggle', 'Sinon, la question n’apparaît que si l’invité répond « Avec joie »'],
+      ], { question: 'Nouvelle question', type: 'texte', options: [], obligatoire: false, pourTous: false }]] },
     ] },
     { id: 'footer', label: 'Pied de page', hint: 'Photo floutée derrière le monogramme.', groups: [
       { title: 'Pied de page', fields: [
@@ -160,6 +167,48 @@
     } finally { host?.classList.remove('uploading'); }
   }
 
+  // ---------- Animations d'ajout / suppression ----------
+  // Même esprit que le formulaire du site : un élément ajouté se déplie comme un volet,
+  // un élément supprimé se replie avant de disparaître. Vignettes (photos, couleurs) : léger zoom.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(.22, 1, .36, 1)';
+  const closedFrame = { height: '0px', paddingTop: '0px', paddingBottom: '0px', marginBottom: '0px', opacity: 0, transform: 'translateY(-8px)' };
+  const openFrame = el => {
+    const cs = getComputedStyle(el);
+    return { height: el.offsetHeight + 'px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginBottom: cs.marginBottom, opacity: 1, transform: 'none' };
+  };
+  function unfold(el) {
+    if (reduce || !el) return;
+    el.style.overflow = 'hidden';
+    el.animate([closedFrame, openFrame(el)], { duration: 700, easing: EASE }).onfinish = () => { el.style.overflow = ''; };
+  }
+  // Fermeture : courbe progressive (accélère puis freine) et plus longue que l'ouverture,
+  // sinon le repli est fini avant qu'on ait pu le voir. Le contenu s'efface pendant que le volet se ferme.
+  const EASE_CLOSE = 'cubic-bezier(.45, 0, .25, 1)';
+  function foldAway(el) {
+    if (reduce || !el) return Promise.resolve();
+    el.style.overflow = 'hidden';
+    return el.animate([openFrame(el), { opacity: .55, offset: .45 }, closedFrame],
+      { duration: 650, easing: EASE_CLOSE, fill: 'forwards' }).finished;
+  }
+  function popIn(el) {
+    if (!reduce && el) el.animate([{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: EASE });
+  }
+  function popOut(el) {
+    if (reduce || !el) return Promise.resolve();
+    return el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.8)' }], { duration: 450, easing: EASE_CLOSE, fill: 'forwards' }).finished;
+  }
+  // Élément(s) à animer au prochain rendu : même objet parent, même chemin, indices [from, to[
+  let revealNext = null;
+  const markReveal = (root, path, from, to = from + 1) => { revealNext = { root, path, from, to }; };
+  // Appelé pendant le rendu : anime les éléments ajoutés une fois le panneau en place (avant l'affichage)
+  function revealIn(root, path, items, anim) {
+    const r = revealNext;
+    if (!r || r.root !== root || r.path !== path) return;
+    revealNext = null;
+    queueMicrotask(() => items.slice(r.from, r.to).forEach(anim));
+  }
+
   // ---------- Champs ----------
   function field([path, label, type, help, extra, blank], root = content, rerender) {
     const el = document.createElement('div');
@@ -175,6 +224,12 @@
         el.innerHTML = `${head}<input type="${type}" ${type === 'number' ? 'min="1" max="20"' : ''}>${foot}`;
         const i = $('input', el); i.value = val ?? '';
         i.addEventListener('input', () => update(type === 'number' ? Number(i.value) || 1 : i.value));
+        break;
+      }
+      case 'select': {
+        el.innerHTML = `${head}<select>${extra.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>${foot}`;
+        const s = $('select', el); s.value = val ?? extra[0][0];
+        s.addEventListener('change', () => { update(s.value); redraw(); }); // affiche / masque les champs qui en dépendent
         break;
       }
       case 'textarea': {
@@ -216,16 +271,19 @@
             </div></div>`).join('')}
           ${!fixed || list.length < fixed ? `<button type="button" class="add-tile"><b>+</b>Ajouter</button>` : ''}
           </div>${foot}`;
+        revealIn(root, path, $$('.img-tile', el), popIn);
         el.addEventListener('click', async e => {
           const b = e.target.closest('button'); if (!b) return;
           const arr = [...list];
           if (b.classList.contains('add-tile')) {
             const urls = await upload(await pickFiles(!fixed), el);
             if (!urls.length) return;
-            update(fixed ? arr.concat(urls).slice(0, fixed) : arr.concat(urls));
+            const next = fixed ? arr.concat(urls).slice(0, fixed) : arr.concat(urls);
+            markReveal(root, path, arr.length, next.length);
+            update(next);
           } else {
             const i = Number(b.dataset.i);
-            if (b.dataset.a === 'del') arr.splice(i, 1);
+            if (b.dataset.a === 'del') { await popOut(b.closest('.img-tile')); arr.splice(i, 1); }
             if (b.dataset.a === 'left' && i > 0) [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
             if (b.dataset.a === 'swap') {
               const [url] = await upload(await pickFiles(false), el);
@@ -262,16 +320,17 @@
           <label class="color"><input type="color" value="${esc(c)}" data-i="${i}"><code>${esc(c)}</code>
           <button type="button" class="icon-btn danger" data-del="${i}" aria-label="Supprimer">✕</button></label>`).join('')}
           <button type="button" class="btn btn-ghost btn-sm" data-add>+ Couleur</button></div>`;
+        revealIn(root, path, $$('.color', el), popIn);
         el.addEventListener('input', e => {
           if (e.target.type !== 'color') return;
           list[e.target.dataset.i] = e.target.value.toUpperCase();
           e.target.nextElementSibling.textContent = e.target.value.toUpperCase();
           update([...list]);
         });
-        el.addEventListener('click', e => {
-          if (e.target.closest('[data-add]')) { update([...list, '#C8A86B']); redraw(); }
+        el.addEventListener('click', async e => {
+          if (e.target.closest('[data-add]')) { markReveal(root, path, list.length); update([...list, '#C8A86B']); redraw(); }
           const d = e.target.closest('[data-del]');
-          if (d) { e.preventDefault(); list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
+          if (d) { e.preventDefault(); await popOut(d.closest('.color')); list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
         });
         break;
       }
@@ -281,11 +340,13 @@
           <div class="string-row"><input type="text" data-i="${i}" value="${esc(s)}" style="flex:1">
           <button type="button" class="icon-btn danger" data-del="${i}" aria-label="Supprimer">✕</button></div>`).join('')}
           <div><button type="button" class="btn btn-ghost btn-sm" data-add>+ Ajouter</button></div></div>${foot}`;
+        // Nouvelle ligne : se déplie et reçoit directement le curseur
+        revealIn(root, path, $$('.string-row', el), row => { unfold(row); $('input', row).focus({ preventScroll: true }); });
         el.addEventListener('input', e => { if (e.target.dataset.i != null) { list[e.target.dataset.i] = e.target.value; update([...list]); } });
-        el.addEventListener('click', e => {
-          if (e.target.closest('[data-add]')) { update([...list, '']); redraw(); }
+        el.addEventListener('click', async e => {
+          if (e.target.closest('[data-add]')) { markReveal(root, path, list.length); update([...list, '']); redraw(); }
           const d = e.target.closest('[data-del]');
-          if (d) { list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
+          if (d) { await foldAway(d.closest('.string-row')); list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
         });
         break;
       }
@@ -299,21 +360,28 @@
             <button type="button" class="icon-btn" data-a="up" title="Monter">↑</button>
             <button type="button" class="icon-btn" data-a="down" title="Descendre">↓</button>
             <button type="button" class="icon-btn danger" data-a="del" title="Supprimer">✕</button></div></div><div class="fields"></div>`;
-          sub.forEach(def => $('.fields', card).append(field(def, item, redraw)));
-          card.querySelector('.item-tools').addEventListener('click', e => {
+          // 7e élément facultatif d'une définition : condition d'affichage selon l'élément (ex. choix d'une liste)
+          sub.forEach(def => { if (!def[6] || def[6](item)) $('.fields', card).append(field(def, item, redraw)); });
+          card.querySelector('.item-tools').addEventListener('click', async e => {
             const a = e.target.closest('button')?.dataset.a; if (!a) return;
             if (a === 'del' && !confirm('Supprimer cet élément ?')) return;
-            if (a === 'del') list.splice(i, 1);
+            if (a === 'del') { await foldAway(card); list.splice(i, 1); }
             if (a === 'up' && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
             if (a === 'down' && i < list.length - 1) [list[i + 1], list[i]] = [list[i], list[i + 1]];
             update(list); redraw();
           });
           el.append(card);
         });
+        revealIn(root, path, $$(':scope > .item', el), card => {
+          // Le nouvel élément reste visible : on le fait entrer dans l'écran s'il apparaît plus bas
+          const r = card.getBoundingClientRect(); // mesuré avant l'animation (hauteur finale)
+          unfold(card);
+          if (r.bottom > innerHeight) scrollBy({ top: r.bottom - innerHeight + 40, behavior: reduce ? 'auto' : 'smooth' });
+        });
         const add = document.createElement('button');
         add.type = 'button'; add.className = 'btn btn-ghost btn-sm'; add.textContent = '+ Ajouter';
         add.style.justifySelf = 'start';
-        add.addEventListener('click', () => { list.push({ ...blank }); update(list); redraw(); });
+        add.addEventListener('click', () => { list.push(structuredClone(blank)); /* copie profonde : chaque élément a ses propres listes */ markReveal(root, path, list.length - 1); update(list); redraw(); });
         el.append(add);
         set(root, path, list);
         break;
@@ -455,6 +523,10 @@
     const kids = yes.reduce((n, r) => n + (r.enfants || 0), 0);
     const regimes = yes.filter(r => r.regime);
     const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    // Réponses aux questions personnalisées : [{ question, reponse }], seules les réponses remplies
+    const answers = r => (Array.isArray(r.reponses) ? r.reponses : []).filter(a => a && a.question && String(a.reponse ?? '').trim());
+    // Une colonne d'export par question (intitulés tels qu'ils étaient au moment de la réponse)
+    const questionCols = [...new Set(rsvps.flatMap(r => answers(r).map(a => a.question)))];
 
     panel.innerHTML = `
       <div class="stats">
@@ -474,7 +546,8 @@
           <td>${esc(r.nom)}<br><span class="muted">${esc([r.email, r.telephone].filter(Boolean).join(' · '))}</span></td>
           <td>${r.present ? '<span class="pill yes">Présent</span>' : '<span class="pill no">Absent</span>'}</td>
           <td>${r.present ? r.nb_personnes + (r.enfants ? `<br><span class="muted">dont ${r.enfants} enf.</span>` : '') : '—'}</td>
-          <td class="muted">${[r.accompagnants && 'Avec : ' + esc(r.accompagnants), r.moments?.length && esc(r.moments.join(', ')), r.chanson && '♪ ' + esc(r.chanson)].filter(Boolean).join('<br>') || '—'}</td>
+          <td class="muted">${[r.accompagnants && 'Avec : ' + esc(r.accompagnants), r.moments?.length && esc(r.moments.join(', ')), r.chanson && '♪ ' + esc(r.chanson),
+            ...answers(r).map(a => `<b style="font-weight:500">${esc(a.question)}</b> : ${esc(a.reponse)}`)].filter(Boolean).join('<br>') || '—'}</td>
           <td style="max-width:240px">${esc(r.message) || '<span class="muted">—</span>'}</td>
           <td><button type="button" class="icon-btn danger" data-del="${esc(r.id)}" title="Supprimer">✕</button></td>
         </tr>`).join('')}</tbody></table></div>` : '<div class="empty">Aucune réponse pour le moment.</div>'}`;
@@ -483,6 +556,7 @@
       const cols = [['Date', r => new Date(r.created_at).toLocaleString('fr-FR')], ['Nom', r => r.nom], ['Présent', r => r.present ? 'Oui' : 'Non'],
         ['Personnes', r => r.nb_personnes], ['Enfants', r => r.enfants], ['Accompagnants', r => r.accompagnants],
         ['Moments', r => (r.moments || []).join(', ')], ['Régime', r => r.regime], ['Chanson', r => r.chanson],
+        ...questionCols.map(q => [q, r => answers(r).find(a => a.question === q)?.reponse]),
         ['Email', r => r.email], ['Téléphone', r => r.telephone], ['Message', r => r.message]];
       const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const csv = '﻿' + [cols.map(c => cell(c[0])).join(';'), ...rsvps.map(r => cols.map(c => cell(c[1](r))).join(';'))].join('\r\n');

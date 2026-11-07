@@ -83,6 +83,8 @@ window.MARIAGE_DEFAULT = {
     moments: ['Cérémonie', 'Cocktail', 'Dîner', 'Brunch du lendemain'],
     demanderEnfants: true,
     demanderChanson: true,
+    // Questions ajoutées par les mariés : { question, type: 'texte' | 'liste', options: [], obligatoire, pourTous }
+    questions: [],
   },
   footer: {
     photo: 'assets/demo/footer.jpg',
