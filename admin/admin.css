@@ -10,6 +10,9 @@
   --muted: #A39582;
   --danger: #D98C8C;
   --ok: #9FC5A0;
+  /* Coins arrondis : même arrondi que les boutons du site pour les contrôles, un peu plus pour les cartes */
+  --radius: 4px;
+  --radius-lg: 8px;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--noir); color: var(--ivoire); font: 300 15px/1.6 'Jost', sans-serif; -webkit-font-smoothing: antialiased; }
@@ -178,3 +181,14 @@ td .muted, .muted { color: var(--muted); font-size: 13px; }
   .inline-form { grid-template-columns: 1fr; }
   .img-field { flex-direction: column; align-items: flex-start; }
 }
+
+/* ---------- Coins arrondis ---------- */
+/* Contrôles (champs, boutons, pastilles) : --radius ; cartes et panneaux : --radius-lg */
+.btn, .icon-btn, .login-card input,
+.f input[type="text"], .f input[type="date"], .f input[type="time"], .f input[type="number"], .f input[type="email"], .f textarea, .f select,
+.color, .img-tile .tools button, .thumb, .demo-banner, .toast { border-radius: var(--radius); }
+.login-card, .group, .item, .stat, .empty, .section-switch { border-radius: var(--radius-lg); }
+/* Contenus qui touchent le bord : on coupe ce qui dépasse pour garder l'arrondi */
+.table-wrap, .img-tile, .add-tile { border-radius: var(--radius-lg); overflow: hidden; }
+.pill { border-radius: 999px; }
+.tabs button { border-radius: 0 var(--radius) var(--radius) 0; } /* le filet doré de l'onglet actif reste droit à gauche */
