@@ -145,6 +145,9 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
    On remplace donc le verre dépoli par le noir du site, uniquement sur iOS. */
 @supports (-webkit-touch-callout: none) {
   .topbar.scrolled { background: var(--noir); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* Le grain est un calque fixé transparent posé AU-DESSUS de l'en-tête : Safari le prenait pour
+     l'élément du haut et ne trouvait aucune couleur. Invisible sur un écran de téléphone : on le retire. */
+  body::after { display: none; }
 }
 /* Monogramme : initiales séparées par un filet doré (pas un caractère « | ») */
 .mono-link { text-decoration: none; display: inline-flex; align-items: center; height: 46px; }
