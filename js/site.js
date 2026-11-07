@@ -183,11 +183,9 @@
   });
 
   // ---------- Défilement : en-tête, bouton flottant, parallax ----------
-  const topbar = $('.topbar'), floatBtn = $('.float-rsvp'), hero = $('.hero');
-  const rsvpSection = $('#rsvp');
+  const topbar = $('.topbar'), toTopBtn = $('.to-top'), hero = $('.hero');
   const parallax = $$('.parallax');
-  let answered = false;
-  try { answered = localStorage.getItem('mariage.repondu') === '1'; } catch {}
+  const ivorySections = $$('section.ivory');
   // Une seule mise à jour par image affichée (le scroll peut déclencher des dizaines d'événements par image)
   let scrollQueued = false;
   function onScroll() {
@@ -197,11 +195,11 @@
       scrollQueued = false;
       const sy = scrollY;
       topbar.classList.toggle('scrolled', sy > 40);
-      if (floatBtn) {
-        const rr = rsvpSection.getBoundingClientRect();
-        const rsvpVisible = rr.top < innerHeight * .85 && rr.bottom > innerHeight * .15;
-        floatBtn.classList.toggle('show', sy > hero.offsetHeight * .8 && !rsvpVisible && !answered);
-      }
+      // Retour en haut : visible dès qu'on a quitté l'accueil
+      toTopBtn.classList.toggle('show', sy > hero.offsetHeight * .8);
+      // Le bouton passe en tons foncés quand il survole une section claire (ivoire)
+      const y = innerHeight - 50;
+      toTopBtn.classList.toggle('on-light', ivorySections.some(s => { const r = s.getBoundingClientRect(); return r.top <= y && r.bottom >= y; }));
       if (!reduce) parallax.forEach(el => {
         const r = el.parentElement.getBoundingClientRect();
         if (r.bottom > 0 && r.top < innerHeight) el.style.transform = `translate3d(0, ${(r.top + r.height / 2 - innerHeight / 2) * -0.12}px, 0)`;
@@ -365,8 +363,6 @@
       btn.disabled = true; btn.textContent = 'Envoi…';
       try {
         await MariageStore.submitRsvp(payload, C);
-        answered = true;
-        try { localStorage.setItem('mariage.repondu', '1'); } catch {}
         body.innerHTML = yes
           ? `<div class="rsvp-done"><h3>Merci, à très bientôt !</h3><p>Votre réponse a bien été enregistrée. Nous avons hâte de célébrer avec vous.</p></div>`
           : `<div class="rsvp-done"><h3>Merci de nous avoir répondu</h3><p>Vous nous manquerez. Nous penserons à vous ce jour-là.</p></div>`;
