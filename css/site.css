@@ -166,10 +166,15 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
 
 .menu {
   position: fixed; inset: 0; z-index: 48; /* sous l en-tête (50) pour garder la croix de fermeture visible */ background: rgba(11, 10, 9, .97);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;
-  opacity: 0; visibility: hidden; transition: opacity .6s var(--ease), visibility .6s;
+  flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+  /* Fermé : retiré de la page (display: none), pas seulement transparent. Sinon Safari iOS 26
+     le prend pour l'élément du haut et laisse voir la page derrière l'heure.
+     « allow-discrete » + @starting-style gardent le fondu à l'ouverture et à la fermeture. */
+  display: none; opacity: 0;
+  transition: opacity .6s var(--ease), display .6s allow-discrete;
 }
-.menu.open { opacity: 1; visibility: visible; }
+.menu.open { display: flex; opacity: 1; }
+@starting-style { .menu.open { opacity: 0; } .menu.open a { transform: translateY(100%); } }
 /* Menu ouvert : l en-tête devient transparent, seuls le monogramme et la croix restent */
 body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .menu ul { list-style: none; padding: 0; margin: 0; text-align: center; }
@@ -313,10 +318,11 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 .gallery button:hover img { transform: scale(1.04); filter: saturate(1); }
 
 .lightbox {
-  position: fixed; inset: 0; z-index: 100; background: rgba(11,10,9,.94); display: grid; place-items: center; padding: 24px;
-  opacity: 0; visibility: hidden; transition: opacity .4s, visibility .4s;
+  position: fixed; inset: 0; z-index: 100; background: rgba(11,10,9,.94); place-items: center; padding: 24px;
+  display: none; opacity: 0; transition: opacity .4s, display .4s allow-discrete; /* fermée : retirée (voir .menu) */
 }
-.lightbox.open { opacity: 1; visibility: visible; }
+.lightbox.open { display: grid; opacity: 1; }
+@starting-style { .lightbox.open { opacity: 0; } }
 .lightbox img { max-height: 88vh; max-width: 100%; object-fit: contain; }
 .lightbox button { position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 22px; background: none; border: 0; font-size: 40px; font-weight: 200; line-height: 1; }
 
