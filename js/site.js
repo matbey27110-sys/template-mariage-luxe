@@ -59,7 +59,18 @@
 
   // Bandeau défilant
   const item = `<span>${esc(C.couple.prenom1)} <em>&amp;</em> ${esc(C.couple.prenom2)}</span><span class="dot"></span><span class="date">${esc(derived.datePoints)}</span><span class="dot"></span>`;
-  $('.marquee-track').innerHTML = item.repeat(8);
+  const track = $('.marquee-track');
+  track.innerHTML = item.repeat(8);
+  // Démarrage une fois le texte en place et la police chargée : la distance (-50 %) est alors la bonne,
+  // et la durée suit la longueur des prénoms pour garder une vitesse constante (≈ 40 px/s)
+  const startMarquee = () => {
+    track.classList.remove('is-on');
+    track.style.setProperty('--marquee-dur', `${Math.max(20, track.scrollWidth / 2 / 40)}s`);
+    void track.offsetWidth; // relance propre de l'animation
+    track.classList.add('is-on');
+  };
+  requestAnimationFrame(startMarquee);
+  if (document.fonts) document.fonts.ready.then(startMarquee);
 
   // Programme
   $('.timeline').innerHTML = (C.programme.items || []).map(it => `

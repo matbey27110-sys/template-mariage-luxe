@@ -248,7 +248,10 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 
 /* ---------- Bandeau défilant ---------- */
 .marquee { background: var(--noir); border-block: 1px solid rgba(200,168,107,.18); overflow: hidden; padding: 22px 0; }
-.marquee-track { display: flex; align-items: center; width: max-content; animation: marquee 60s linear infinite; }
+/* L'animation ne démarre qu'une fois le bandeau rempli (classe .is-on posée par site.js) :
+   lancée sur un bandeau vide, Safari calcule « -50 % de 0 px » et le bandeau reste immobile */
+.marquee-track { display: flex; align-items: center; width: max-content; will-change: transform; }
+.marquee-track.is-on { animation: marquee var(--marquee-dur, 60s) linear infinite; }
 .marquee-track span {
   font-family: var(--f-logo); font-size: 19px; line-height: 1; text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; padding: 0 32px;
 }
