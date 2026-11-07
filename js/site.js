@@ -137,14 +137,35 @@
 
   // ---------- Menu ----------
   const burger = $('.burger'), menu = $('.menu');
+  // Apparition : le voile arrive, puis les liens montent un à un, puis la date.
+  // Disparition : les liens repartent vers le haut (cascade inversée), puis le voile s'efface et le menu est retiré.
+  const menuLinks = $$('a', menu);
+  let menuTimer;
   function toggleMenu(open) {
-    menu.classList.toggle('open', open);
+    if (open === menu.classList.contains('open')) return;
+    clearTimeout(menuTimer);
     burger.setAttribute('aria-expanded', open);
     menu.setAttribute('aria-hidden', !open);
     document.body.style.overflow = open ? 'hidden' : '';
+    const shown = menuLinks.filter(a => !a.closest('[hidden]')); // liens des sections affichées
+    if (open) {
+      menu.classList.remove('closing');
+      menu.classList.add('is-visible');
+      shown.forEach((a, i) => { a.style.transitionDelay = `${.15 + i * .06}s`; });
+      void menu.offsetWidth; // le menu est affiché avant de lancer l'animation
+      menu.classList.add('open');
+      // Entrée terminée : on retire les délais pour que le survol des liens reste immédiat
+      menuTimer = setTimeout(() => shown.forEach(a => { a.style.transitionDelay = ''; }), 1400);
+    } else {
+      shown.forEach((a, i) => { a.style.transitionDelay = `${(shown.length - 1 - i) * .05}s`; });
+      menu.classList.add('closing');
+      menu.classList.remove('open');
+      // Retiré une fois le voile effacé (liens ≈ 1,1 s, voile 0,8 s + 0,7 s)
+      menuTimer = setTimeout(() => menu.classList.remove('is-visible', 'closing'), reduce ? 0 : 1600);
+    }
   }
   burger.addEventListener('click', () => toggleMenu(!menu.classList.contains('open')));
-  $$('a', menu).forEach((a, i) => { a.style.transitionDelay = `${.08 + i * .05}s`; a.addEventListener('click', () => toggleMenu(false)); });
+  menuLinks.forEach(a => a.addEventListener('click', () => toggleMenu(false)));
 
   // ---------- Défilement doux vers les ancres (#rsvp, #programme…) ----------
   // Plus lent et plus souple que le défilement natif : accélération et décélération douces,
