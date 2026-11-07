@@ -486,6 +486,10 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 700px) {
+  /* Téléphone : la barre en verre fumé est là dès l'ouverture (pas de changement au premier défilement,
+     qui faisait sauter l'affichage et changer la zone de l'heure). Le menu ouvert la rend toujours transparente. */
+  .topbar { background-color: rgba(11, 10, 9, .82); }
+  .topbar::before { opacity: 1; }
   .trio { grid-template-columns: 1fr 1fr; }
   .trio .frame-tall { grid-column: 1 / -1; grid-row: 1; }
   .trio .frame-tall img { aspect-ratio: 1; }
