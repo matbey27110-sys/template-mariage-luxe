@@ -206,7 +206,7 @@
   // ---------- Défilement : en-tête, bouton flottant, parallax ----------
   const topbar = $('.topbar'), toTopBtn = $('.to-top'), hero = $('.hero');
   const parallax = $$('.parallax');
-  const ivorySections = $$('section.ivory');
+  const toTopDark = $('.to-top-dark'), lightSections = $$('section.ivory'); // sections à fond clair
   // Une seule mise à jour par image affichée (le scroll peut déclencher des dizaines d'événements par image)
   let scrollQueued = false;
   function onScroll() {
@@ -218,9 +218,15 @@
       topbar.classList.toggle('scrolled', sy > 40);
       // Retour en haut : visible dès qu'on a quitté l'accueil
       toTopBtn.classList.toggle('show', sy > hero.offsetHeight * .8);
-      // Le bouton passe en tons foncés quand il survole une section claire (ivoire)
-      const y = innerHeight - 50;
-      toTopBtn.classList.toggle('on-light', ivorySections.some(s => { const r = s.getBoundingClientRect(); return r.top <= y && r.bottom >= y; }));
+      // Partie du bouton au-dessus d'une section claire → jumeau noir visible sur cette bande seulement
+      const b = toTopBtn.getBoundingClientRect();
+      let clip = 'inset(0 0 100% 0)'; // par défaut : entièrement blanc
+      for (const s of lightSections) {
+        const r = s.getBoundingClientRect();
+        const top = Math.max(r.top, b.top), bottom = Math.min(r.bottom, b.bottom);
+        if (bottom > top) { clip = `inset(${top - b.top}px 0 ${b.bottom - bottom}px 0)`; break; }
+      }
+      toTopDark.style.clipPath = clip;
       if (!reduce) parallax.forEach(el => {
         const r = el.parentElement.getBoundingClientRect();
         if (r.bottom > 0 && r.top < innerHeight) el.style.transform = `translate3d(0, ${(r.top + r.height / 2 - innerHeight / 2) * -0.12}px, 0)`;
@@ -228,6 +234,7 @@
     });
   }
   addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll, { passive: true }); // rotation du téléphone : bouton recalculé
 
   // ---------- Apparitions au défilement ----------
   // Chaque élément reçoit un mouvement selon sa nature (voir « Apparitions » dans site.css)

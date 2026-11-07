@@ -432,21 +432,22 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
 .credit { font-size: var(--t-micro); letter-spacing: .3em; text-transform: uppercase; color: var(--taupe); margin-top: 20px; }
 
 /* ---------- Bouton « retour en haut » ---------- */
-/* Simple cercle filaire doré, sans remplissage */
-.to-top {
-  position: fixed; z-index: 45; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%;
-  display: grid; place-items: center; text-decoration: none;
-  color: var(--or-pale); background: transparent; border: 1px solid var(--or);
+/* Cercle filaire blanc, sans remplissage. Un jumeau noir est posé exactement dessus et n'est montré
+   (clip-path calculé par site.js) que sur la partie qui survole une section claire :
+   blanc sur fond sombre ou photo, noir sur fond clair, coupé net à la frontière. Toujours du pur noir/blanc. */
+.to-top, .to-top-dark {
+  position: fixed; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center; background: transparent;
   opacity: 0; transform: translateY(20px) scale(.9); pointer-events: none;
-  transition: opacity .5s var(--ease), transform .5s var(--ease), border-color .4s var(--ease), color .4s var(--ease);
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
 }
+.to-top { z-index: 45; text-decoration: none; color: #fff; border: 1px solid #fff; }
+.to-top-dark { z-index: 46; color: var(--noir); border: 1px solid var(--noir); clip-path: inset(0 0 100% 0); }
 .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
-.to-top svg { width: 13px; height: 17px; transition: transform .6s var(--ease); }
-.to-top:hover, .to-top:focus-visible { border-color: var(--or-pale); color: var(--ivoire); }
-.to-top:hover svg, .to-top:focus-visible svg { transform: translateY(-3px); }
-/* Au-dessus d'une section ivoire (posé par site.js) : tons foncés pour rester lisible */
-.to-top.on-light { color: var(--encre); border-color: var(--taupe); }
-.to-top.on-light:hover, .to-top.on-light:focus-visible { color: var(--grenat); border-color: var(--grenat); }
+.to-top.show + .to-top-dark { opacity: 1; transform: none; }
+.to-top svg, .to-top-dark svg { width: 13px; height: 17px; transition: transform .6s var(--ease); }
+.to-top:hover svg, .to-top:focus-visible svg,
+.to-top:hover + .to-top-dark svg, .to-top:focus-visible + .to-top-dark svg { transform: translateY(-3px); }
 
 /* ---------- Apparitions ---------- */
 /* Le type de mouvement est choisi automatiquement dans site.js selon l'élément :
@@ -499,7 +500,7 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
   .cols { grid-template-columns: 1fr; }
   .countdown .sep { display: none; }
   .countdown .unit { min-width: 0; }
-  .to-top { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; }
+  .to-top, .to-top-dark { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; }
   .hero-date { letter-spacing: .35em; }
 }
 
