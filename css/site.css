@@ -133,9 +133,13 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
 /* ---------- En-tête & menu ---------- */
 .topbar {
   position: fixed; inset: 0 0 auto; z-index: 50; display: flex; justify-content: space-between; align-items: center;
-  padding: 22px var(--gutter); transition: background .5s, padding .5s;
+  /* --safe-top : hauteur de la barre d'état sur iPhone (heure, batterie). L'en-tête passe dessous
+     et son fond la recouvre, au lieu de laisser voir la page défiler derrière l'heure. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  padding: calc(22px + var(--safe-top)) max(var(--gutter), env(safe-area-inset-right, 0px)) 22px max(var(--gutter), env(safe-area-inset-left, 0px));
+  transition: background .5s, padding .5s;
 }
-.topbar.scrolled { background: rgba(11, 10, 9, .82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-block: 14px; }
+.topbar.scrolled { background: rgba(11, 10, 9, .82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-top: calc(14px + var(--safe-top)); padding-bottom: 14px; }
 /* Monogramme : initiales séparées par un filet doré (pas un caractère « | ») */
 .mono-link { text-decoration: none; display: inline-flex; align-items: center; height: 46px; }
 .mono {
@@ -173,7 +177,7 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 /* ---------- Hero ---------- */
 .hero {
   min-height: 100vh; min-height: 100svh; display: grid; place-items: center; text-align: center;
-  padding-top: 110px; padding-bottom: 120px; overflow: hidden;
+  padding-top: calc(110px + env(safe-area-inset-top, 0px)); padding-bottom: 120px; overflow: hidden;
 }
 .hero-bg, .fullbleed-bg, .footer-bg {
   position: absolute; inset: -6% 0; background-size: cover; background-position: center;
@@ -305,7 +309,7 @@ body:has(.menu.open) .topbar { background: transparent; -webkit-backdrop-filter:
 }
 .lightbox.open { opacity: 1; visibility: visible; }
 .lightbox img { max-height: 88vh; max-width: 100%; object-fit: contain; }
-.lightbox button { position: absolute; top: 18px; right: 22px; background: none; border: 0; font-size: 40px; font-weight: 200; line-height: 1; }
+.lightbox button { position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 22px; background: none; border: 0; font-size: 40px; font-weight: 200; line-height: 1; }
 
 /* ---------- RSVP ---------- */
 .rsvp { background: radial-gradient(ellipse at 50% 0%, rgba(94,11,18,.45), transparent 60%), var(--noir); }
@@ -400,7 +404,7 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
 /* ---------- Bouton « retour en haut » ---------- */
 /* Simple cercle filaire doré, sans remplissage */
 .to-top {
-  position: fixed; z-index: 45; right: 22px; bottom: 22px; width: 56px; height: 56px; border-radius: 50%;
+  position: fixed; z-index: 45; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%;
   display: grid; place-items: center; text-decoration: none;
   color: var(--or-pale); background: transparent; border: 1px solid var(--or);
   opacity: 0; transform: translateY(20px) scale(.9); pointer-events: none;
@@ -461,7 +465,7 @@ fieldset.field { border: 0; margin: 0; padding: 0; }
   .cols { grid-template-columns: 1fr; }
   .countdown .sep { display: none; }
   .countdown .unit { min-width: 0; }
-  .to-top { right: 16px; bottom: 16px; width: 50px; height: 50px; }
+  .to-top { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; }
   .hero-date { letter-spacing: .35em; }
 }
 
