@@ -192,3 +192,11 @@ td .muted, .muted { color: var(--muted); font-size: 13px; }
 .table-wrap, .img-tile, .add-tile { border-radius: var(--radius-lg); overflow: hidden; }
 .pill { border-radius: 999px; }
 .tabs button { border-radius: 0 var(--radius) var(--radius) 0; } /* le filet doré de l'onglet actif reste droit à gauche */
+
+/* Option « photos en noir et blanc » : les vignettes de l’admin montrent le rendu du site */
+body.photos-nb .thumb, body.photos-nb .img-tile img { filter: grayscale(1); transition: filter .4s; }
+/* Noir et blanc photo par photo (bouton ◐) */
+.thumb, .img-tile img { transition: filter .4s; }
+.thumb.nb, .img-tile img.nb { filter: grayscale(1); }
+.nb-btn[aria-pressed="true"] { background: rgba(200, 168, 107, .16); border-color: var(--or-pale); }
+.img-tile .tools button[data-nb][aria-pressed="true"] { background: var(--ivoire); color: var(--noir); }

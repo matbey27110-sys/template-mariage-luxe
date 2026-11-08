@@ -90,4 +90,9 @@ window.MARIAGE_DEFAULT = {
     photo: 'assets/demo/footer.jpg',
     message: 'Merci de faire partie de notre histoire',
   },
+  // Apparence des photos : le noir et blanc n'est qu'un affichage, les fichiers d'origine restent en couleur
+  photos: {
+    noirEtBlanc: false, // toutes les photos
+    nb: [],             // ou photo par photo (adresses des photos à passer en noir et blanc)
+  },
 };

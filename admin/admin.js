@@ -108,6 +108,12 @@
         ['footer.photo', 'Photo de fond', 'image'],
       ] },
     ] },
+    { id: 'apparence', label: 'Apparence', hint: 'Rendu des photos sur tout le site.', groups: [
+      { title: 'Photos', fields: [
+        ['photos.noirEtBlanc', 'Afficher toutes les photos en noir et blanc', 'toggle',
+          'S’applique à toutes les photos du site, y compris celles que vous importez. Désactivé, chaque photo suit son propre réglage (bouton ◐ sur chaque photo). Vos fichiers restent en couleur.'],
+      ] },
+    ] },
     { sep: true },
     { id: 'invites', label: 'Invités', hint: 'Un lien personnel par invité : nom pré-rempli et nombre de places limité.' },
     { id: 'reponses', label: 'Réponses', hint: 'Toutes les réponses reçues.' },
@@ -209,12 +215,42 @@
     queueMicrotask(() => items.slice(r.from, r.to).forEach(anim));
   }
 
+  // ---------- Noir et blanc par photo ----------
+  // Liste des photos à afficher en noir et blanc (content.photos.nb), repérées par leur adresse :
+  // une photo garde son réglage si on la déplace. Le fichier lui-même reste en couleur.
+  const nbList = () => ((content.photos ??= {}).nb ??= []);
+  const isNb = url => !!url && nbList().includes(url);
+  function nbButton(url, cls, label, i) {
+    if (!url) return '';
+    const on = isNb(url);
+    return `<button type="button" class="${cls}" data-nb ${i != null ? `data-i="${i}"` : ''} aria-pressed="${on}" title="Afficher cette photo en noir et blanc">${label}</button>`;
+  }
+  function toggleNb(url, btn, img) {
+    const list = nbList(), k = list.indexOf(url);
+    if (k < 0) list.push(url); else list.splice(k, 1);
+    const on = k < 0;
+    btn?.setAttribute('aria-pressed', on);
+    img?.classList.toggle('nb', on);
+    markDirty();
+  }
+  // À l'enregistrement : on oublie les photos qui ne sont plus utilisées nulle part
+  function pruneNb() {
+    const used = new Set();
+    const walk = v => { if (typeof v === 'string') used.add(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+    walk({ ...content, photos: { ...content.photos, nb: [] } });
+    content.photos.nb = nbList().filter(u => used.has(u));
+  }
+
   // ---------- Champs ----------
   function field([path, label, type, help, extra, blank], root = content, rerender) {
     const el = document.createElement('div');
     el.className = 'f' + (['textarea', 'images', 'background', 'list', 'colors', 'strings'].includes(type) ? ' wide' : '');
     const val = get(root, path);
-    const update = v => { set(root, path, v); markDirty(); if (path === 'couple.initiales') renderBrand(); };
+    const update = v => {
+      set(root, path, v); markDirty();
+      if (path === 'couple.initiales') renderBrand();
+      if (path === 'photos.noirEtBlanc') document.body.classList.toggle('photos-nb', !!v); // aperçu immédiat des vignettes
+    };
     const redraw = rerender || renderPanel;
     const head = label ? `<span>${esc(label)}</span>` : '';
     const foot = help ? `<small>${esc(help)}</small>` : '';
@@ -251,20 +287,25 @@
         break;
       }
       case 'image': {
-        el.innerHTML = `${head}<div class="img-field"><img class="thumb" alt=""><div class="img-actions"><button type="button" class="btn btn-ghost btn-sm">Changer la photo</button></div></div>${foot}`;
-        $('img', el).src = src(val) || '';
-        $('button', el).addEventListener('click', async () => {
+        el.innerHTML = `${head}<div class="img-field"><img class="thumb" alt=""><div class="img-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-change>Changer la photo</button>
+          ${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Noir et blanc')}</div></div>${foot}`;
+        const thumb = $('img', el);
+        thumb.src = src(val) || ''; thumb.classList.toggle('nb', isNb(val));
+        $('[data-change]', el).addEventListener('click', async () => {
           const [url] = await upload(await pickFiles(false), el);
-          if (url) { update(url); $('img', el).src = src(url); }
+          if (url) { update(url); redraw(); }
         });
+        $('[data-nb]', el)?.addEventListener('click', e => toggleNb(val, e.currentTarget, thumb));
         break;
       }
       case 'images': {
         const list = Array.isArray(val) ? val : [];
         const fixed = extra; // nombre fixe de photos (ex. trio)
         el.innerHTML = `${head}<div class="img-grid">${list.map((u, i) => `
-          <div class="img-tile"><img alt="" src="${esc(src(u))}">
+          <div class="img-tile"><img alt="" src="${esc(src(u))}" class="${isNb(u) ? 'nb' : ''}">
             <div class="tools">
+              ${nbButton(u, '', '◐', i)}
               ${fixed ? '' : `<button type="button" data-a="left" data-i="${i}" title="Déplacer avant">←</button>`}
               <button type="button" data-a="swap" data-i="${i}" title="Remplacer">↻</button>
               ${fixed ? '' : `<button type="button" data-a="del" data-i="${i}" title="Supprimer">✕</button>`}
@@ -274,6 +315,7 @@
         revealIn(root, path, $$('.img-tile', el), popIn);
         el.addEventListener('click', async e => {
           const b = e.target.closest('button'); if (!b) return;
+          if (b.hasAttribute('data-nb')) return toggleNb(list[Number(b.dataset.i)], b, $('img', b.closest('.img-tile')));
           const arr = [...list];
           if (b.classList.contains('add-tile')) {
             const urls = await upload(await pickFiles(!fixed), el);
@@ -302,9 +344,12 @@
           ${MARIAGE_FONDS.map(f => `<button type="button" class="img-tile bg-choice ${f.url === val ? 'selected' : ''}" data-url="${esc(f.url)}"><img alt="" src="${esc(src(f.url))}"><span>${esc(f.nom)}</span></button>`).join('')}
           ${!isLib && val ? `<button type="button" class="img-tile bg-choice selected" data-url="${esc(val)}"><img alt="" src="${esc(src(val))}"><span>Votre photo</span></button>` : ''}
           <button type="button" class="add-tile" data-upload><b>+</b>Votre photo</button>
-        </div><small>Choisissez un fond de la bibliothèque ou envoyez votre propre photo.</small>`;
+        </div>${val ? `<div>${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Fond choisi en noir et blanc')}</div>` : ''}
+        <small>Choisissez un fond de la bibliothèque ou envoyez votre propre photo.</small>`;
+        $$('.bg-choice', el).forEach(t => $('img', t).classList.toggle('nb', isNb(t.dataset.url)));
         el.addEventListener('click', async e => {
           const b = e.target.closest('button'); if (!b) return;
+          if (b.hasAttribute('data-nb')) return toggleNb(val, b, $('.bg-choice.selected img', el));
           if (b.hasAttribute('data-upload')) {
             const [url] = await upload(await pickFiles(false), el);
             if (!url) return;
@@ -585,6 +630,7 @@
     const btn = $('.save');
     btn.disabled = true; btn.textContent = 'Enregistrement…';
     try {
+      pruneNb();
       await S.saveContent(content);
       dirty = false;
       $('.save-state').textContent = 'Enregistré ✓';
@@ -610,6 +656,7 @@
   // ---------- Démarrage ----------
   async function start() {
     content = await S.loadContent();
+    document.body.classList.toggle('photos-nb', !!content.photos?.noirEtBlanc);
     $('.login').hidden = true;
     $('.app').hidden = false;
     $('.demo-banner').hidden = S.live;

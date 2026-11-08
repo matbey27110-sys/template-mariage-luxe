@@ -22,8 +22,10 @@
 
   // ---------- Remplissage ----------
   $$('[data-c]').forEach(el => { el.textContent = value(el.dataset.c) ?? ''; });
-  $$('[data-src]').forEach(el => { const v = value(el.dataset.src); if (v) el.src = v; });
-  $$('[data-bg]').forEach(el => { const v = value(el.dataset.bg); if (v) el.style.backgroundImage = `url("${v}")`; });
+  // Noir et blanc photo par photo (admin : bouton ◐ sur chaque photo)
+  const nbPhotos = new Set(C.photos?.nb || []);
+  $$('[data-src]').forEach(el => { const v = value(el.dataset.src); if (v) { el.src = v; el.classList.toggle('nb', nbPhotos.has(v)); } });
+  $$('[data-bg]').forEach(el => { const v = value(el.dataset.bg); if (v) { el.style.backgroundImage = `url("${v}")`; el.classList.toggle('nb', nbPhotos.has(v)); } });
   $('.hero-veil').style.setProperty('--veil', C.hero.assombrissement ?? .6);
   // Mémorise la photo d'accueil : à la prochaine visite, index.html la précharge avant même d'avoir le contenu
   try { if (C.hero.fond && !C.hero.fond.startsWith('data:')) localStorage.setItem('mariage.heroFond', C.hero.fond); } catch {}
@@ -51,6 +53,9 @@
 
   // Favicon aux initiales (même fonction que l'admin, dans store.js)
   MariageStore.setFavicon(C.couple.initiales);
+
+  // Option « photos en noir et blanc » (admin > Apparence) : simple filtre d'affichage, voir site.css
+  document.documentElement.classList.toggle('photos-nb', !!C.photos?.noirEtBlanc);
 
   // Sections désactivées dans l'admin
   $$('[data-section]').forEach(el => el.classList.toggle('is-off', !(C[el.dataset.section] || {}).active));
@@ -91,12 +96,13 @@
   $('.swatches').classList.remove('reveal'); // ce sont les pastilles qui apparaissent une à une
 
   // Galerie + visionneuse
-  $('.gallery').innerHTML = (C.galerie.photos || []).map(src => `<button type="button" class="reveal"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></button>`).join('');
+  $('.gallery').innerHTML = (C.galerie.photos || []).map(src => `<button type="button" class="reveal"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"${nbPhotos.has(src) ? ' class="nb"' : ''}></button>`).join('');
   const lb = $('.lightbox');
   $('.gallery').addEventListener('click', e => {
     const img = e.target.closest('button')?.querySelector('img');
     if (!img) return;
     $('img', lb).src = img.src;
+    $('img', lb).classList.toggle('nb', img.classList.contains('nb')); // la visionneuse respecte le noir et blanc
     lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false');
   });
   const closeLb = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); };

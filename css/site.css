@@ -331,6 +331,10 @@ body:has(.menu.open) .topbar::before { opacity: 0; }
 .gallery button { display: block; width: 100%; padding: 0; border: 0; margin: 0 0 18px; break-inside: avoid; overflow: hidden; background: none; }
 .gallery img { width: 100%; transition: transform 1.2s var(--ease), filter .6s; filter: saturate(.9); }
 .gallery button:hover img { transform: scale(1.04); filter: saturate(1); }
+/* Option « photos en noir et blanc » (admin > Apparence) : toutes les photos, y compris celles importées.
+   Ce n'est qu'un filtre d'affichage : les fichiers restent en couleur. */
+.photos-nb :is(.hero-bg, .fullbleed-bg, .footer-bg, .frame img, .gallery img, .gallery button:hover img, .lightbox img),
+:is(.hero-bg, .fullbleed-bg, .footer-bg, .frame img, .gallery img, .gallery button:hover img, .lightbox img).nb { filter: grayscale(1); } /* .nb : photo par photo */
 
 .lightbox {
   position: fixed; inset: 0; z-index: 100; background: rgba(11,10,9,.94); place-items: center; padding: 24px;
