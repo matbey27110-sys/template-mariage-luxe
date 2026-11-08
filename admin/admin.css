@@ -257,8 +257,8 @@ body.photos-nb .thumb, body.photos-nb .img-tile img { filter: grayscale(1); }
 .seg button { border: 0; background: none; padding: 6px 12px; border-radius: 999px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--a-muted); }
 .seg button[aria-pressed="true"] { background: var(--a-accent); color: var(--c-on-accent); }
 .seg button:focus-visible { outline: 1px solid var(--a-accent-soft); outline-offset: 2px; }
-/* Libellés sous les deux commutateurs : « Interface » (admin) / « Aperçu du site » */
-.mode-ctl, .seg-ctl { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+/* Libellé « Interface » sous le commutateur clair / sombre de l'admin */
+.mode-ctl { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
 .ctl-cap { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--a-muted); cursor: help; white-space: nowrap; }
 .preview-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 /* L'appareil garde sa vraie taille (390 / 820 / 1440 px de large) : le site y voit ses vrais points de rupture.

@@ -515,7 +515,6 @@
     const app = MBTheme.normalize(content.apparence);
     content.apparence = app;
     MBTheme.apply({ theme: app.theme, mode: MBTheme.resolveMode(app, 'admin') }, { fade }); // pas de fondu à l'ouverture
-    setPreviewMode(app.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : app.modeParDefaut);
   }
 
   // =====================================================================
@@ -524,10 +523,9 @@
   const frame = $('.preview iframe');
   const device = $('.preview-device');
   const fit = $('.preview-fit');
-  // Vraies tailles d'écran (largeur × hauteur de la fenêtre du navigateur)
-  const DEVICES = { mobile: [390, 844], tablet: [820, 1180], desktop: [1440, 900] };
+  // Vraies largeurs d'écran (le site y applique ses points de rupture)
+  const DEVICES = { mobile: 390, tablet: 820, desktop: 1440 };
   let previewReady = false;
-  let previewMode = 'dark';
   let previewQueued = false;
 
   // Envoie le brouillon à l'iframe (au plus une fois par image affichée)
@@ -536,7 +534,7 @@
     previewQueued = true;
     requestAnimationFrame(() => {
       previewQueued = false;
-      frame.contentWindow?.postMessage({ type: 'mb:apercu', content, section: current, mode: previewMode }, ORIGIN);
+      frame.contentWindow?.postMessage({ type: 'mb:apercu', content, section: current }, ORIGIN); // le site applique le mode par défaut du thème
     });
   }
   addEventListener('message', e => {
@@ -547,14 +545,14 @@
 
   // Taille d'écran : l'appareil garde sa vraie largeur (le site y applique ses media queries)
   // et il est réduit pour tenir en entier dans la largeur du panneau, sans jamais être agrandi.
-  // La hauteur affichée suit l'écran réel, limitée à la place disponible (on fait défiler le site dedans).
+  // L'aperçu remplit toute la hauteur du panneau (on fait défiler le site dedans).
   const previewStage = $('.preview-stage');
   function fitDevice() {
     const avW = previewStage.clientWidth - 2, avH = previewStage.clientHeight - 2;   // 2 px : bordure du cadre
     if (avW <= 0 || avH <= 0) return;                                    // panneau masqué (onglet Modifier)
-    const [w, h] = DEVICES[fit.dataset.device || 'mobile'];
+    const w = DEVICES[fit.dataset.device || 'mobile'];
     const scale = Math.min(1, avW / w);
-    const devH = Math.min(h, avH / scale);
+    const devH = avH / scale;                                            // hauteur de l'appareil = hauteur du panneau
     device.style.setProperty('--dev-w', `${w}px`);
     device.style.setProperty('--dev-h', `${devH}px`);
     device.style.setProperty('--dev-scale', scale);
@@ -567,12 +565,6 @@
     fit.dataset.device = b.dataset.device;
     fitDevice();
   }));
-  function setPreviewMode(mode) {
-    previewMode = mode;
-    $$('[data-preview-mode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.previewMode === mode)));
-    sendPreview();
-  }
-  $$('[data-preview-mode]').forEach(b => b.addEventListener('click', () => setPreviewMode(b.dataset.previewMode)));
   addEventListener('resize', () => { measureBar(); fitDevice(); });
   const measureBar = () => document.body.style.setProperty('--bar-h', `${$('.bar').offsetHeight}px`);
 

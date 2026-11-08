@@ -463,8 +463,7 @@
     let lastSection = null;
     addEventListener('message', e => {
       if (e.origin !== location.origin || e.data?.type !== 'mb:apercu') return;
-      render(e.data.content);
-      if (e.data.mode === 'dark' || e.data.mode === 'light') MBTheme.apply({ mode: e.data.mode }, { fade: true }); // mode choisi dans l'admin
+      render(e.data.content);   // thème + mode par défaut du couple appliqués par render()
       document.body.classList.remove('is-loading');
       if (e.data.section && e.data.section !== lastSection) {
         lastSection = e.data.section;
