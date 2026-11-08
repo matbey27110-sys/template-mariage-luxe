@@ -1,6 +1,6 @@
 // Moteur de thèmes — partagé par le site invités et le back-office.
 // - applique un thème (data-theme) et un mode (data-mode) sur <html> ;
-// - charge les polices du thème (catalogue themes/index.js) ;
+// - un thème ne change que les couleurs (polices et formes communes : css/tokens.css) ;
 // - gère le commutateur clair / sombre (role="switch") et la mémorisation du choix ;
 // - met en cache l'apparence pour que le script anti-flash du <head> l'applique avant le premier rendu.
 //
@@ -36,15 +36,6 @@
     return a.modeParDefaut;
   }
 
-  // Polices du thème : une seule feuille Google Fonts, ajoutée une fois
-  function loadFonts(themeId) {
-    const t = findTheme(themeId);
-    if (!t.fontsUrl || document.querySelector(`link[data-theme-fonts="${t.id}"]`)) return;
-    const l = document.createElement('link');
-    l.rel = 'stylesheet'; l.href = t.fontsUrl; l.dataset.themeFonts = t.id;
-    document.head.appendChild(l);
-  }
-
   // Applique thème + mode. fade : transition douce des couleurs (~300 ms) pendant la bascule.
   function apply({ theme, mode }, { fade = false } = {}) {
     if (fade && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -52,7 +43,7 @@
       clearTimeout(apply._t);
       apply._t = setTimeout(() => root.classList.remove('theme-fading'), 400);
     }
-    if (theme) { root.dataset.theme = findTheme(theme).id; loadFonts(root.dataset.theme); }
+    if (theme) root.dataset.theme = findTheme(theme).id;
     if (mode) root.dataset.mode = mode;
     // Couleur de la barre du navigateur : celle du thème (token --theme-color)
     requestAnimationFrame(() => {
@@ -88,5 +79,5 @@
     store.set(KEY_CACHE, JSON.stringify({ theme: a.theme, modeParDefaut: a.modeParDefaut }));
   }
 
-  window.MBTheme = { THEMES, DEFAULT, normalize, resolveMode, apply, bindSwitch, remember, findTheme, loadFonts };
+  window.MBTheme = { THEMES, DEFAULT, normalize, resolveMode, apply, bindSwitch, remember, findTheme };
 })();

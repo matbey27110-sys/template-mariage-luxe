@@ -1,22 +1,12 @@
 /* ============================================================
    Thème « Noir & Or » (défaut) — gala, chandelles
    Noir pur #000000, accents or champagne, touches bordeaux.
-   Polices : Blasse (logo, prénoms, grands titres) + Afacad Flux.
-   Chaque thème définit les mêmes tokens, en sombre et en clair.
+   Un thème ne contient QUE des couleurs (mêmes tokens dans chaque thème, en sombre et en clair).
+   Polices et formes sont communes : css/tokens.css.
    ============================================================ */
-@font-face {
-  font-family: 'Blasse';
-  src: url('../assets/fonts/Blasse.woff2') format('woff2'), url('../assets/fonts/Blasse.woff') format('woff');
-  font-weight: 400; font-style: normal; font-display: swap;
-}
 
 /* ---------- Commun aux deux modes ---------- */
 [data-theme="noir-or"] {
-  --f-logo: 'Blasse', 'Didot', serif;                       /* logo, prénoms, grands titres */
-  --f-display: 'Afacad Flux', 'Helvetica Neue', sans-serif; /* textes d'accent */
-  --f-sans: 'Afacad Flux', 'Helvetica Neue', sans-serif;    /* textes courants, capitales, boutons */
-  --radius: 4px;
-
   /* Photos plein écran : voile noir, textes ivoire et or (identiques dans les deux modes) */
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
@@ -58,7 +48,6 @@
   --bar-line: rgba(230, 207, 156, .5);
 
   --signature-glow: rgba(94, 11, 18, .45); /* halo bordeaux en haut de la section RSVP */
-  --grain: .06;
   --theme-color: #000000;                   /* couleur de la barre du navigateur */
 }
 
@@ -92,6 +81,5 @@
   --bar-line: rgba(168, 136, 75, .6);
 
   --signature-glow: rgba(138, 28, 36, .10);
-  --grain: .035;
   --theme-color: #F4EDE2;
 }

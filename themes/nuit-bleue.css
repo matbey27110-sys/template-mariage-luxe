@@ -1,14 +1,9 @@
 /* ============================================================
    Thème « Nuit bleue » — soirée étoilée
    Fonds bleu nuit, accents or pâle et argent. Le noir éventuel reste #000000.
-   Polices : Italiana (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="nuit-bleue"] {
-  --f-logo: 'Italiana', 'Didot', serif;
-  --f-display: 'Cormorant Garamond', 'Garamond', serif;
-  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
-  --radius: 999px; /* boutons en pilule : clin d'œil aux étoiles */
-
   --photo-ink: #F1EEE8;
   --photo-ink-soft: #DCE0E8;
   --photo-muted: #98A0B3;
@@ -47,7 +42,6 @@
   --bar-line: rgba(201, 206, 216, .45);
 
   --signature-glow: rgba(48, 66, 104, .55);
-  --grain: .06;
   --theme-color: #0B1220;
 }
 
@@ -80,6 +74,5 @@
   --bar-line: rgba(24, 36, 61, .35);
 
   --signature-glow: rgba(24, 36, 61, .1);
-  --grain: .03;
   --theme-color: #F1EEE8;
 }

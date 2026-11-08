@@ -9,7 +9,7 @@ Un seul code et un seul projet Supabase pour **tous les couples** (une ligne par
 index.html              Site public (+ script anti-flash du thème dans le <head>)
 css/tokens.css          Contrat des design tokens (échelle typo, contextes nuit / jour / photo)
 css/site.css            Composants du site — n'utilise que des variables
-themes/<id>.css         Un fichier par thème : couleurs (sombre + clair), polices
+themes/<id>.css         Un fichier par thème : couleurs uniquement (sombre + clair)
 themes/index.js         Catalogue des thèmes (cartes de la page Apparence)
 js/theme.js             Thème + mode, commutateur clair / sombre de l'admin
 js/default-content.js   Contenu par défaut = structure complète du contenu + bibliothèque de fonds
@@ -53,7 +53,7 @@ Chaque couple ne voit que **son** contenu, **ses** invités, **ses** réponses e
 
 ## Fonctionnalités
 
-- **Thèmes** (page *Apparence*) : Noir & Or, Bordeaux, Émeraude, Nuit bleue, Ivoire — chacun en sombre et en clair, contrastes AA. Le back-office prend le thème du couple.
+- **Thèmes** (page *Apparence*) : Noir & Or, Bordeaux, Émeraude, Nuit bleue, Ivoire — chacun en sombre et en clair, contrastes AA ; un thème ne change que les couleurs. Le back-office prend le thème du couple.
 - **Mode clair / sombre** choisi par le couple pour le site ; commutateur clair / sombre dans l'admin.
 - **Aperçu en direct** : le vrai site à droite de l'éditeur (mobile / tablette / bureau, sombre / clair), mis à jour à chaque frappe ; les photos ne sont envoyées qu'à l'enregistrement ; « Annuler les modifications » ; point focal des photos.
 - **Sections** : accueil + compte à rebours, notre histoire, programme, le grand jour, lieux, dress code, galerie, RSVP, footer — toutes masquables.
@@ -74,4 +74,4 @@ Email de notification à chaque réponse (fonction Supabase), mot de passe pour 
 
 ## Licence des polices
 
-Le thème Noir & Or utilise **Blasse** (licence « usage personnel ») : acheter une licence commerciale avant toute livraison à un client, ou remplacer la police dans `themes/noir-or.css`. Les autres thèmes utilisent des Google Fonts libres.
+Tous les thèmes utilisent **Blasse** (titres, licence « usage personnel ») et Afacad Flux (Google Fonts, libre) : acheter une licence commerciale de Blasse avant toute livraison à un client, ou remplacer la police dans `css/tokens.css`.

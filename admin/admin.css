@@ -314,7 +314,7 @@ body.photos-nb .thumb, body.photos-nb .img-tile img { filter: grayscale(1); }
   background: var(--thumb-bg) center / cover; color: #F4EDE2;
 }
 .theme-thumb::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, .55), rgba(0, 0, 0, .35) 50%, var(--thumb-fade)); }
-.theme-thumb b { position: relative; font-weight: 400; font-size: 20px; line-height: 1.05; letter-spacing: .04em; text-transform: uppercase; }
+.theme-thumb b { position: relative; font-family: var(--f-logo); font-weight: 400; font-size: 20px; line-height: 1.05; letter-spacing: .04em; text-transform: uppercase; }
 .theme-thumb b i { font-style: normal; color: var(--thumb-accent); }
 .theme-thumb small { position: relative; display: block; margin-top: 6px; font-size: 9px; letter-spacing: .3em; color: var(--thumb-accent); }
 .theme-name { font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }

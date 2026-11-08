@@ -1,14 +1,9 @@
 /* ============================================================
    Thème « Bordeaux » — Maison Rouge, velours
    Fonds bordeaux nuit, accents or champagne. Le noir éventuel reste #000000.
-   Polices : Bodoni Moda (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="bordeaux"] {
-  --f-logo: 'Bodoni Moda', 'Didot', serif;
-  --f-display: 'Cormorant Garamond', 'Garamond', serif;
-  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
-  --radius: 2px;
-
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
   --photo-muted: #A38D7B;
@@ -47,7 +42,6 @@
   --bar-line: rgba(230, 207, 156, .5);
 
   --signature-glow: rgba(138, 28, 36, .55);
-  --grain: .07;
   --theme-color: #3A0A0E;
 }
 
@@ -80,6 +74,5 @@
   --bar-line: rgba(94, 11, 18, .35);
 
   --signature-glow: rgba(94, 11, 18, .12);
-  --grain: .035;
   --theme-color: #E9E0D2;
 }

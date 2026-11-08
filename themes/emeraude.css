@@ -1,14 +1,9 @@
 /* ============================================================
    Thème « Émeraude » — jardin, palais italien
    Fonds vert émeraude profond, accents or champagne. Le noir éventuel reste #000000.
-   Polices : Gilda Display (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="emeraude"] {
-  --f-logo: 'Gilda Display', 'Didot', serif;
-  --f-display: 'Cormorant Garamond', 'Garamond', serif;
-  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
-  --radius: 4px;
-
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
   --photo-muted: #9AA898;
@@ -47,7 +42,6 @@
   --bar-line: rgba(230, 207, 156, .5);
 
   --signature-glow: rgba(43, 96, 76, .5);
-  --grain: .06;
   --theme-color: #0E2A22;
 }
 
@@ -80,6 +74,5 @@
   --bar-line: rgba(14, 42, 34, .35);
 
   --signature-glow: rgba(14, 42, 34, .1);
-  --grain: .03;
   --theme-color: #F4EDE2;
 }

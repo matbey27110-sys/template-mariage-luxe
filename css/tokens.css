@@ -2,11 +2,12 @@
    Design tokens — contrat commun du site invités et du back-office
    ------------------------------------------------------------
    Ce fichier ne contient AUCUNE couleur : il décrit la structure
-   (échelle typographique, espacements, rythme) et la façon dont
-   les couleurs d'un thème sont distribuées selon le contexte.
+   (polices, rayon, échelle typographique, espacements, rythme) et la
+   façon dont les couleurs d'un thème sont distribuées selon le contexte.
+   Formes et typographie sont COMMUNES à tous les thèmes.
 
-   Les valeurs (couleurs, polices, grain…) viennent d'un fichier
-   de thème : themes/<id>.css, qui définit pour chaque mode
+   Les couleurs viennent d'un fichier de thème :
+   themes/<id>.css (couleurs uniquement), qui définit pour chaque mode
    (data-mode="dark" | "light") les familles de tokens :
      --nuit-*   sections principales (fond noir pur en mode sombre)
      --jour-*   sections de respiration (lin / ivoire)
@@ -14,7 +15,19 @@
      --bar-*    en-tête en verre fumé
    Ajouter un thème = ajouter un fichier, sans toucher aux composants.
    ============================================================ */
+@font-face {
+  font-family: 'Blasse';
+  src: url('../assets/fonts/Blasse.woff2') format('woff2'), url('../assets/fonts/Blasse.woff') format('woff');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
 :root {
+  /* Polices et forme : les mêmes pour tous les thèmes (un thème ne change que les couleurs) */
+  --f-logo: 'Blasse', 'Didot', serif;                       /* logo, prénoms, grands titres */
+  --f-display: 'Afacad Flux', 'Helvetica Neue', sans-serif; /* textes d'accent */
+  --f-sans: 'Afacad Flux', 'Helvetica Neue', sans-serif;    /* textes courants, capitales, boutons */
+  --radius: 4px;                                            /* boutons, champs, carte du formulaire */
+
   /* Échelle typographique (ratio ≈ 1.5 entre niveaux) */
   --t-micro: 10px;
   --t-label: 11px;
@@ -34,6 +47,9 @@
   --gutter: clamp(16px, 5vw, 64px);
   --theme-fade: .3s; /* durée du passage clair ↔ sombre */
 }
+/* Grain de la texture : commun à tous les thèmes, plus discret sur fond clair */
+[data-mode="dark"]  { --grain: .06; }
+[data-mode="light"] { --grain: .035; }
 
 /* ------------------------------------------------------------
    Contextes : chaque zone choisit sa famille de couleurs.

@@ -482,21 +482,20 @@
         break;
       }
       case 'themes': {
-        // Une carte par thème : miniature du hero (photo d'accueil réelle), nom, ambiance, pastilles, polices
+        // Une carte par thème : miniature du hero (photo d'accueil réelle), nom, couleurs, pastilles.
+        // Même rendu et mêmes polices pour toutes les miniatures : seules les couleurs changent.
         const hero = src(content.hero.fond) || '';
         const [p1, p2] = [content.couple.prenom1, content.couple.prenom2];
         el.innerHTML = `<div class="themes" role="radiogroup" aria-label="Thème du site">${MBTheme.THEMES.map(t => `
           <button type="button" class="theme-card" role="radio" aria-checked="${t.id === val}" data-theme-id="${esc(t.id)}">
             <span class="theme-thumb" style="--thumb-bg:url('${esc(hero)}');--thumb-accent:${t.pastilles[2]};--thumb-fade:${t.pastilles[0]}">
-              <span><b style="font-family:'${esc(t.polices.titre)}',serif">${esc(p1)} <i>&amp;</i><br>${esc(p2)}</b><small>14 · 06</small></span>
+              <span><b>${esc(p1)} <i>&amp;</i><br>${esc(p2)}</b><small>14 · 06</small></span>
             </span>
             <span class="theme-name">${esc(t.nom)}${t.modeConseille === 'light' ? '<em>Clair</em>' : ''}</span>
-            <span class="theme-meta">${esc(t.ambiance)} · ${esc(t.polices.titre)} &amp; ${esc(t.polices.texte)}</span>
+            <span class="theme-meta">${esc(t.ambiance)}</span>
             <span class="swatch-row">${t.pastilles.map(c => `<span style="background:${c}"></span>`).join('')}</span>
           </button>`).join('')}</div>
-          <small>Un clic applique le thème à l’aperçu et à cet espace. Rien n’est publié avant « Enregistrer ».</small>`;
-        // Polices des miniatures
-        MBTheme.THEMES.forEach(t => MBTheme.loadFonts(t.id));
+          <small>Un thème change uniquement les couleurs du site. Un clic l’applique à l’aperçu et à cet espace ; rien n’est publié avant « Enregistrer ».</small>`;
         el.addEventListener('click', e => {
           const card = e.target.closest('.theme-card'); if (!card) return;
           const t = MBTheme.findTheme(card.dataset.themeId);

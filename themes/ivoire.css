@@ -1,14 +1,9 @@
 /* ============================================================
    Thème « Ivoire » — cérémonie de jour, épuré (clair par défaut)
    Fonds lin et ivoire, touches taupe, accents or champagne. Le noir reste #000000.
-   Polices : Cormorant Garamond (titres et accents) · Afacad Flux (texte).
+   Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="ivoire"] {
-  --f-logo: 'Cormorant Garamond', 'Garamond', serif;
-  --f-display: 'Cormorant Garamond', 'Garamond', serif;
-  --f-sans: 'Afacad Flux', 'Helvetica Neue', sans-serif;
-  --radius: 0px; /* lignes nettes, très épuré */
-
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
   --photo-muted: #B3A493;
@@ -47,7 +42,6 @@
   --bar-line: rgba(139, 122, 105, .45);
 
   --signature-glow: rgba(139, 122, 105, .14);
-  --grain: .03;
   --theme-color: #F4EDE2;
 }
 
@@ -80,6 +74,5 @@
   --bar-line: rgba(230, 207, 156, .45);
 
   --signature-glow: rgba(139, 122, 105, .35);
-  --grain: .05;
   --theme-color: #000000;
 }
