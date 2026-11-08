@@ -10,13 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
 <!-- Le back-office prend le thème choisi par le couple : mêmes tokens et mêmes fichiers de thème que le site -->
-<link rel="stylesheet" href="../css/tokens.css?v=20261108e">
-<link rel="stylesheet" href="../themes/noir-or.css?v=20261108e">
-<link rel="stylesheet" href="../themes/bordeaux.css?v=20261108e">
-<link rel="stylesheet" href="../themes/emeraude.css?v=20261108e">
-<link rel="stylesheet" href="../themes/nuit-bleue.css?v=20261108e">
-<link rel="stylesheet" href="../themes/ivoire.css?v=20261108e">
-<link rel="stylesheet" href="admin.css?v=20261108e">
+<link rel="stylesheet" href="../css/tokens.css?v=20261108f">
+<link rel="stylesheet" href="../themes/noir-or.css?v=20261108f">
+<link rel="stylesheet" href="../themes/bordeaux.css?v=20261108f">
+<link rel="stylesheet" href="../themes/emeraude.css?v=20261108f">
+<link rel="stylesheet" href="../themes/nuit-bleue.css?v=20261108f">
+<link rel="stylesheet" href="../themes/ivoire.css?v=20261108f">
+<link rel="stylesheet" href="admin.css?v=20261108f">
 <script>
   // Anti-flash : thème du couple (dernière apparence vue) + mode choisi dans l'admin, avant le premier rendu
   (function () {
@@ -48,12 +48,15 @@
     <div class="brand">
       <div class="brand-row">
         <span class="brand-mono"></span>
-        <!-- Commutateur clair / sombre du back-office -->
-        <button class="mode-switch" type="button" role="switch" aria-checked="true" aria-label="Mode sombre">
+        <!-- Commutateur clair / sombre de l'INTERFACE de l'admin (n'agit pas sur le site) -->
+        <div class="mode-ctl">
+        <button class="mode-switch" type="button" role="switch" aria-checked="true" aria-label="Mode sombre de l'interface" aria-describedby="mode-ctl-cap">
           <svg class="sw-sun" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="2.2"/><path d="M6 .6v1.6M6 9.8v1.6M.6 6h1.6M9.8 6h1.6M2.2 2.2l1.1 1.1M8.7 8.7l1.1 1.1M2.2 9.8l1.1-1.1M8.7 3.3l1.1-1.1"/></svg>
           <svg class="sw-moon" viewBox="0 0 12 12" aria-hidden="true"><path d="M9.6 7.6A4.2 4.2 0 0 1 4.4 2.4a4.2 4.2 0 1 0 5.2 5.2Z"/></svg>
           <span class="sw-knob"></span>
         </button>
+        <span class="ctl-cap" id="mode-ctl-cap" title="Mode clair / sombre de cet espace d'édition. Ne change pas le site des invités.">Interface</span>
+        </div>
       </div>
       <span class="brand-sub">Espace mariés</span>
     </div>
@@ -96,13 +99,18 @@
             <button type="button" data-device="tablet" aria-pressed="false" title="Tablette (768 px)">Tablette</button>
             <button type="button" data-device="desktop" aria-pressed="false" title="Ordinateur (1280 px)">Bureau</button>
           </div>
-          <div class="seg" role="group" aria-label="Mode de l'aperçu">
-            <button type="button" data-preview-mode="dark" aria-pressed="true">Sombre</button>
-            <button type="button" data-preview-mode="light" aria-pressed="false">Clair</button>
+          <!-- Mode du SITE dans l'aperçu : pour voir le site des invités en sombre ou en clair -->
+          <div class="seg-ctl">
+            <div class="seg" role="group" aria-label="Mode du site dans l'aperçu" aria-describedby="prev-mode-cap">
+              <button type="button" data-preview-mode="dark" aria-pressed="true">Sombre</button>
+              <button type="button" data-preview-mode="light" aria-pressed="false">Clair</button>
+            </div>
+            <span class="ctl-cap" id="prev-mode-cap" title="Affiche le site des invités en mode sombre ou clair, sans rien enregistrer. Les photos plein écran gardent leur voile sombre dans les deux modes.">Aperçu du site</span>
           </div>
         </div>
         <div class="preview-stage">
-          <div class="preview-device"><iframe title="Aperçu du site" src="../index.html?apercu=1" loading="eager"></iframe></div>
+          <!-- .preview-fit : cadre à la taille réduite ; .preview-device : vraie taille de l'appareil, réduite par transform -->
+          <div class="preview-fit" data-device="mobile"><div class="preview-device"><iframe title="Aperçu du site" src="../index.html?apercu=1" loading="eager"></iframe></div></div>
         </div>
         <p class="preview-note">Aperçu des modifications non enregistrées</p>
       </aside>
@@ -114,11 +122,11 @@
 <input type="file" class="file-picker" accept="image/*" hidden>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="../themes/index.js?v=20261108e"></script>
-<script src="../js/theme.js?v=20261108e"></script>
-<script src="../js/config.js?v=20261108e"></script>
-<script src="../js/default-content.js?v=20261108e"></script>
-<script src="../js/store.js?v=20261108e"></script>
-<script src="admin.js?v=20261108e"></script>
+<script src="../themes/index.js?v=20261108f"></script>
+<script src="../js/theme.js?v=20261108f"></script>
+<script src="../js/config.js?v=20261108f"></script>
+<script src="../js/default-content.js?v=20261108f"></script>
+<script src="../js/store.js?v=20261108f"></script>
+<script src="admin.js?v=20261108f"></script>
 </body>
 </html>

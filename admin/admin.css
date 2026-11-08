@@ -252,19 +252,28 @@ body.photos-nb .thumb, body.photos-nb .img-tile img { filter: grayscale(1); }
   display: flex; flex-direction: column; gap: 10px; padding: 18px clamp(12px, 2vw, 24px) 14px;
   border-left: 1px solid var(--a-line);
 }
-.preview-bar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+.preview-bar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: flex-start; }
 .seg { display: inline-flex; border: 1px solid var(--a-line-strong); border-radius: 999px; padding: 2px; }
 .seg button { border: 0; background: none; padding: 6px 12px; border-radius: 999px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--a-muted); }
 .seg button[aria-pressed="true"] { background: var(--a-accent); color: var(--c-on-accent); }
 .seg button:focus-visible { outline: 1px solid var(--a-accent-soft); outline-offset: 2px; }
-.preview-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; display: grid; place-items: start center; }
-/* L'appareil garde sa vraie largeur (375 / 768 / 1280 px) et il est réduit pour tenir dans la colonne */
-.preview-device {
-  width: var(--dev-w, 375px); height: var(--dev-h, 100%); transform: scale(var(--dev-scale, 1)); transform-origin: top center;
-  border: 1px solid var(--a-line-strong); border-radius: 22px; overflow: hidden; background: #000000;
-  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .6);
+/* Libellés sous les deux commutateurs : « Interface » (admin) / « Aperçu du site » */
+.mode-ctl, .seg-ctl { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.ctl-cap { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--a-muted); cursor: help; white-space: nowrap; }
+.preview-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+/* L'appareil garde sa vraie taille (390 / 820 / 1440 px de large) : le site y voit ses vrais points de rupture.
+   transform: scale() ne change pas la place occupée dans la mise en page : le cadre .preview-fit prend donc
+   la taille RÉDUITE (calculée en JS) et l'appareil y est posé en absolu, réduit depuis son coin haut gauche. */
+.preview-fit {
+  position: relative; width: var(--fit-w, 390px); height: var(--fit-h, 100%); margin: 0 auto;
+  border: 1px solid var(--a-line-strong); border-radius: 22px; overflow: hidden; background: var(--a-bg);
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .45);
 }
-.preview-device[data-device="desktop"], .preview-device[data-device="tablet"] { border-radius: 10px; }
+.preview-fit[data-device="desktop"], .preview-fit[data-device="tablet"] { border-radius: 8px; }
+.preview-device {
+  position: absolute; top: 0; left: 0; width: var(--dev-w, 390px); height: var(--dev-h, 844px);
+  transform: scale(var(--dev-scale, 1)); transform-origin: top left;
+}
 .preview-device iframe { display: block; width: 100%; height: 100%; border: 0; }
 .preview-note { margin: 0; text-align: center; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--a-faint); }
 

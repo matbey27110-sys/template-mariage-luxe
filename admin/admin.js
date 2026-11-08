@@ -523,7 +523,9 @@
   // =====================================================================
   const frame = $('.preview iframe');
   const device = $('.preview-device');
-  const DEVICES = { mobile: 375, tablet: 768, desktop: 1280 };
+  const fit = $('.preview-fit');
+  // Vraies tailles d'écran (largeur × hauteur de la fenêtre du navigateur)
+  const DEVICES = { mobile: [390, 844], tablet: [820, 1180], desktop: [1440, 900] };
   let previewReady = false;
   let previewMode = 'dark';
   let previewQueued = false;
@@ -543,18 +545,26 @@
     sendPreview();
   });
 
-  // Taille d'écran : l'appareil garde sa vraie largeur et il est réduit pour tenir dans la colonne
+  // Taille d'écran : l'appareil garde sa vraie largeur (le site y applique ses media queries)
+  // et il est réduit pour tenir en entier dans la largeur du panneau, sans jamais être agrandi.
+  // La hauteur affichée suit l'écran réel, limitée à la place disponible (on fait défiler le site dedans).
+  const previewStage = $('.preview-stage');
   function fitDevice() {
-    const stage = $('.preview-stage');
-    const w = DEVICES[device.dataset.device || 'mobile'];
-    const scale = Math.min(1, (stage.clientWidth - 8) / w);
+    const avW = previewStage.clientWidth - 2, avH = previewStage.clientHeight - 2;   // 2 px : bordure du cadre
+    if (avW <= 0 || avH <= 0) return;                                    // panneau masqué (onglet Modifier)
+    const [w, h] = DEVICES[fit.dataset.device || 'mobile'];
+    const scale = Math.min(1, avW / w);
+    const devH = Math.min(h, avH / scale);
     device.style.setProperty('--dev-w', `${w}px`);
+    device.style.setProperty('--dev-h', `${devH}px`);
     device.style.setProperty('--dev-scale', scale);
-    device.style.setProperty('--dev-h', `${Math.max(320, stage.clientHeight / scale)}px`);
+    fit.style.setProperty('--fit-w', `${w * scale}px`);
+    fit.style.setProperty('--fit-h', `${devH * scale}px`);
   }
+  new ResizeObserver(fitDevice).observe(previewStage);                          // fenêtre, colonne ou onglet qui change
   $$('[data-device]').forEach(b => b.addEventListener('click', () => {
     $$('[data-device]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    device.dataset.device = b.dataset.device;
+    fit.dataset.device = b.dataset.device;
     fitDevice();
   }));
   function setPreviewMode(mode) {
