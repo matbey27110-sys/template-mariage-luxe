@@ -1,0 +1,85 @@
+/* ============================================================
+   Thème « Nuit bleue » — soirée étoilée
+   Fonds bleu nuit, accents or pâle et argent. Le noir éventuel reste #000000.
+   Polices : Italiana (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   ============================================================ */
+[data-theme="nuit-bleue"] {
+  --f-logo: 'Italiana', 'Didot', serif;
+  --f-display: 'Cormorant Garamond', 'Garamond', serif;
+  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
+  --radius: 999px; /* boutons en pilule : clin d'œil aux étoiles */
+
+  --photo-ink: #F1EEE8;
+  --photo-ink-soft: #DCE0E8;
+  --photo-muted: #98A0B3;
+  --photo-accent: #E6CF9C;
+  --photo-accent-soft: #F3E7C8;
+  --photo-line: rgba(220, 224, 232, .45);
+  --photo-on-accent: #000000;
+}
+
+[data-theme="nuit-bleue"][data-mode="dark"] {
+  --nuit-bg: #0B1220;
+  --nuit-surface: linear-gradient(180deg, rgba(48, 66, 104, .45), rgba(24, 36, 61, .2) 60%), #0B1220;
+  --nuit-ink: #F1EEE8;
+  --nuit-ink-soft: #DCE0E8;
+  --nuit-muted: #98A0B3;
+  --nuit-accent: #E6CF9C;
+  --nuit-accent-soft: #C9CED8;            /* argent */
+  --nuit-line: rgba(201, 206, 216, .4);
+  --nuit-error: #F0B4B4;
+  --nuit-on-accent: #000000;
+
+  --jour-bg: #EEF0F3;                     /* ivoire froid */
+  --jour-surface: #FFFFFF;
+  --jour-ink: #000000;
+  --jour-ink-soft: #2C3650;
+  --jour-muted: #646C7F;
+  --jour-accent: #18243D;
+  --jour-accent-soft: #18243D;
+  --jour-line: rgba(11, 18, 32, .16);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F1EEE8;
+
+  --bar-bg: rgba(11, 18, 32, .86);
+  --bar-ink: #F1EEE8;
+  --bar-accent: #E6CF9C;
+  --bar-line: rgba(201, 206, 216, .45);
+
+  --signature-glow: rgba(48, 66, 104, .55);
+  --grain: .06;
+  --theme-color: #0B1220;
+}
+
+[data-theme="nuit-bleue"][data-mode="light"] {
+  --nuit-bg: #F1EEE8;
+  --nuit-surface: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 45%), #E9ECF1;
+  --nuit-ink: #000000;
+  --nuit-ink-soft: #2C3650;
+  --nuit-muted: #636B7E;
+  --nuit-accent: #7E6838;
+  --nuit-accent-soft: #18243D;
+  --nuit-line: rgba(24, 36, 61, .28);
+  --nuit-error: #8A1C24;
+  --nuit-on-accent: #FFFFFF; /* texte sur l'or foncé : blanc pour le contraste AA */
+
+  --jour-bg: #E4E8EE;
+  --jour-surface: #FAFAF8;
+  --jour-ink: #000000;
+  --jour-ink-soft: #2C3650;
+  --jour-muted: #5F6678;
+  --jour-accent: #18243D;
+  --jour-accent-soft: #18243D;
+  --jour-line: rgba(11, 18, 32, .16);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F1EEE8;
+
+  --bar-bg: rgba(241, 238, 232, .88);
+  --bar-ink: #000000;
+  --bar-accent: #18243D;
+  --bar-line: rgba(24, 36, 61, .35);
+
+  --signature-glow: rgba(24, 36, 61, .1);
+  --grain: .03;
+  --theme-color: #F1EEE8;
+}

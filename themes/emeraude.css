@@ -1,0 +1,85 @@
+/* ============================================================
+   Thème « Émeraude » — jardin, palais italien
+   Fonds vert émeraude profond, accents or champagne. Le noir éventuel reste #000000.
+   Polices : Gilda Display (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   ============================================================ */
+[data-theme="emeraude"] {
+  --f-logo: 'Gilda Display', 'Didot', serif;
+  --f-display: 'Cormorant Garamond', 'Garamond', serif;
+  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
+  --radius: 4px;
+
+  --photo-ink: #F4EDE2;
+  --photo-ink-soft: #E9E0D2;
+  --photo-muted: #9AA898;
+  --photo-accent: #C8A86B;
+  --photo-accent-soft: #E6CF9C;
+  --photo-line: rgba(230, 207, 156, .5);
+  --photo-on-accent: #000000;
+}
+
+[data-theme="emeraude"][data-mode="dark"] {
+  --nuit-bg: #0E2A22;
+  --nuit-surface: linear-gradient(180deg, rgba(43, 96, 76, .45), rgba(27, 68, 54, .2) 60%), #0E2A22;
+  --nuit-ink: #F4EDE2;
+  --nuit-ink-soft: #E3E6DA;
+  --nuit-muted: #9AA898;
+  --nuit-accent: #C8A86B;
+  --nuit-accent-soft: #E6CF9C;
+  --nuit-line: rgba(200, 168, 107, .45);
+  --nuit-error: #F0B4B4;
+  --nuit-on-accent: #000000;
+
+  --jour-bg: #F4EDE2;
+  --jour-surface: #FFFFFF;
+  --jour-ink: #000000;
+  --jour-ink-soft: #2F4A40;
+  --jour-muted: #606D64;
+  --jour-accent: #0E2A22;
+  --jour-accent-soft: #1B4436;
+  --jour-line: rgba(14, 42, 34, .18);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(14, 42, 34, .86);
+  --bar-ink: #F4EDE2;
+  --bar-accent: #C8A86B;
+  --bar-line: rgba(230, 207, 156, .5);
+
+  --signature-glow: rgba(43, 96, 76, .5);
+  --grain: .06;
+  --theme-color: #0E2A22;
+}
+
+[data-theme="emeraude"][data-mode="light"] {
+  --nuit-bg: #F4EDE2;
+  --nuit-surface: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 45%), #EEF0E6;
+  --nuit-ink: #000000;
+  --nuit-ink-soft: #2F4A40;
+  --nuit-muted: #606D64;
+  --nuit-accent: #7F6739;
+  --nuit-accent-soft: #1B4436;
+  --nuit-line: rgba(14, 42, 34, .28);
+  --nuit-error: #8A1C24;
+  --nuit-on-accent: #FFFFFF; /* texte sur l'or foncé : blanc pour le contraste AA */
+
+  --jour-bg: #E6EAE0;
+  --jour-surface: #F8F7F2;
+  --jour-ink: #000000;
+  --jour-ink-soft: #2F4A40;
+  --jour-muted: #5D6B61;
+  --jour-accent: #0E2A22;
+  --jour-accent-soft: #1B4436;
+  --jour-line: rgba(14, 42, 34, .18);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(244, 237, 226, .88);
+  --bar-ink: #000000;
+  --bar-accent: #1B4436;
+  --bar-line: rgba(14, 42, 34, .35);
+
+  --signature-glow: rgba(14, 42, 34, .1);
+  --grain: .03;
+  --theme-color: #F4EDE2;
+}

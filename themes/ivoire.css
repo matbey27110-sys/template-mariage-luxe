@@ -1,0 +1,85 @@
+/* ============================================================
+   Thème « Ivoire » — cérémonie de jour, épuré (clair par défaut)
+   Fonds lin et ivoire, touches taupe, accents or champagne. Le noir reste #000000.
+   Polices : Cormorant Garamond (titres et accents) · Afacad Flux (texte).
+   ============================================================ */
+[data-theme="ivoire"] {
+  --f-logo: 'Cormorant Garamond', 'Garamond', serif;
+  --f-display: 'Cormorant Garamond', 'Garamond', serif;
+  --f-sans: 'Afacad Flux', 'Helvetica Neue', sans-serif;
+  --radius: 0px; /* lignes nettes, très épuré */
+
+  --photo-ink: #F4EDE2;
+  --photo-ink-soft: #E9E0D2;
+  --photo-muted: #B3A493;
+  --photo-accent: #E6CF9C;
+  --photo-accent-soft: #F4EDE2;
+  --photo-line: rgba(244, 237, 226, .5);
+  --photo-on-accent: #000000;
+}
+
+[data-theme="ivoire"][data-mode="light"] {
+  --nuit-bg: #F4EDE2;
+  --nuit-surface: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 45%), #EFE7DA;
+  --nuit-ink: #000000;
+  --nuit-ink-soft: #4E4338;
+  --nuit-muted: #776759;
+  --nuit-accent: #7F6739;
+  --nuit-accent-soft: #77685A;
+  --nuit-line: rgba(139, 122, 105, .35);
+  --nuit-error: #8A1C24;
+  --nuit-on-accent: #FFFFFF; /* texte sur l'or foncé : blanc pour le contraste AA */
+
+  --jour-bg: #E9E0D2;
+  --jour-surface: #F8F4EC;
+  --jour-ink: #000000;
+  --jour-ink-soft: #4E4338;
+  --jour-muted: #6E6052;
+  --jour-accent: #6E6053;
+  --jour-accent-soft: #6F5F50;
+  --jour-line: rgba(139, 122, 105, .3);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(244, 237, 226, .88);
+  --bar-ink: #000000;
+  --bar-accent: #A8884B;
+  --bar-line: rgba(139, 122, 105, .45);
+
+  --signature-glow: rgba(139, 122, 105, .14);
+  --grain: .03;
+  --theme-color: #F4EDE2;
+}
+
+[data-theme="ivoire"][data-mode="dark"] {
+  --nuit-bg: #000000;
+  --nuit-surface: linear-gradient(180deg, rgba(139, 122, 105, .28), rgba(139, 122, 105, .08) 60%), #000000;
+  --nuit-ink: #F4EDE2;
+  --nuit-ink-soft: #E9E0D2;
+  --nuit-muted: #A39582;
+  --nuit-accent: #C8A86B;
+  --nuit-accent-soft: #D9CBB6;
+  --nuit-line: rgba(200, 168, 107, .4);
+  --nuit-error: #E9A3A3;
+  --nuit-on-accent: #000000;
+
+  --jour-bg: #E9E0D2;
+  --jour-surface: #F4EDE2;
+  --jour-ink: #000000;
+  --jour-ink-soft: #4E4338;
+  --jour-muted: #6E6052;
+  --jour-accent: #6E6053;
+  --jour-accent-soft: #6F5F50;
+  --jour-line: rgba(139, 122, 105, .3);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(0, 0, 0, .82);
+  --bar-ink: #F4EDE2;
+  --bar-accent: #C8A86B;
+  --bar-line: rgba(230, 207, 156, .45);
+
+  --signature-glow: rgba(139, 122, 105, .35);
+  --grain: .05;
+  --theme-color: #000000;
+}

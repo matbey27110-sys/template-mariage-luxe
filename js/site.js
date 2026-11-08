@@ -1,3 +1,7 @@
+// Site invités.
+// - Mode normal : le contenu publié est lu dans Supabase (js/store.js), puis affiché par render().
+// - Mode aperçu (index.html?apercu=1, dans l'iframe de l'admin) : rien n'est lu ni envoyé ;
+//   l'admin envoie son brouillon par postMessage à chaque modification et render() est rappelé.
 (async function () {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -5,141 +9,17 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+  const PREVIEW = /[?&]apercu=1/.test(location.search);
 
-  let C;
-  try { C = await MariageStore.loadContent(); }
-  catch (e) { console.error(e); C = window.MARIAGE_DEFAULT; }
+  let C = null;          // contenu affiché (publié, ou brouillon en aperçu)
+  let derived = {};      // valeurs calculées (dates formatées)
+  let invite = null;     // invité du lien personnel (?invite=…)
+  let countdownTimer = null;
 
-  // ---------- Valeurs calculées ----------
-  const [y, m, d] = (C.hero.date || '').split('-').map(Number);
-  const derived = {
-    datePoints: y ? `${String(d).padStart(2, '0')} · ${String(m).padStart(2, '0')} · ${y}` : '',
-    dateLongue: y ? `${d} ${MOIS[m - 1]} ${y}` : '',
-  };
-  const value = path => (path in derived ? derived[path] : get(C, path));
-
-  document.title = `${C.couple.prenom1} & ${C.couple.prenom2} — ${derived.dateLongue}`;
-
-  // ---------- Remplissage ----------
-  $$('[data-c]').forEach(el => { el.textContent = value(el.dataset.c) ?? ''; });
-  // Noir et blanc photo par photo (admin : bouton ◐ sur chaque photo)
-  const nbPhotos = new Set(C.photos?.nb || []);
-  $$('[data-src]').forEach(el => { const v = value(el.dataset.src); if (v) { el.src = v; el.classList.toggle('nb', nbPhotos.has(v)); } });
-  $$('[data-bg]').forEach(el => { const v = value(el.dataset.bg); if (v) { el.style.backgroundImage = `url("${v}")`; el.classList.toggle('nb', nbPhotos.has(v)); } });
-  $('.hero-veil').style.setProperty('--veil', C.hero.assombrissement ?? .6);
-  // Mémorise la photo d'accueil : à la prochaine visite, index.html la précharge avant même d'avoir le contenu
-  try { if (C.hero.fond && !C.hero.fond.startsWith('data:')) localStorage.setItem('mariage.heroFond', C.hero.fond); } catch {}
-
-  // ---------- Identité : monogramme, sceau, favicon ----------
-  const [i1, i2] = (C.couple.initiales || '').split('|').map(s => s.trim());
-  const pair = i2 !== undefined;
-  $$('[data-mono]').forEach(el => {
-    el.innerHTML = `<span class="mono">${pair ? `${esc(i1)}<i aria-hidden="true"></i>${esc(i2)}` : esc(C.couple.initiales)}</span>`;
-  });
-
-  // Logo du footer : initiales croisées par un filet doré, posées sur le cercle de verre
-  const seal = $('[data-seal]');
-  if (seal) {
-    const center = pair
-      ? `<text class="initial" x="112" y="150" text-anchor="middle">${esc(i1)}</text>
-         <line class="rule" x1="118" y1="212" x2="182" y2="88"/>
-         <text class="initial" x="189" y="210" text-anchor="middle">${esc(i2)}</text>`
-      : `<text class="initial" x="150" y="180" text-anchor="middle">${esc(C.couple.initiales)}</text>`;
-    seal.innerHTML = `
-      <svg class="seal" viewBox="0 0 300 300" role="img" aria-label="${esc(`${C.couple.prenom1} & ${C.couple.prenom2}`)}">
-        ${center}
-      </svg>`;
-  }
-
-  // Favicon aux initiales (même fonction que l'admin, dans store.js)
-  MariageStore.setFavicon(C.couple.initiales);
-
-  // Option « photos en noir et blanc » (admin > Apparence) : simple filtre d'affichage, voir site.css
-  document.documentElement.classList.toggle('photos-nb', !!C.photos?.noirEtBlanc);
-
-  // Sections désactivées dans l'admin
-  $$('[data-section]').forEach(el => el.classList.toggle('is-off', !(C[el.dataset.section] || {}).active));
-  $$('[data-section-link]').forEach(el => { el.hidden = !(C[el.dataset.sectionLink] || {}).active; });
-  if (!C.rsvp.active) $$('[data-rsvp-link]').forEach(el => el.remove());
-
-  // Bandeau défilant
-  const item = `<span>${esc(C.couple.prenom1)} <em>&amp;</em> ${esc(C.couple.prenom2)}</span><span class="dot"></span><span class="date">${esc(derived.datePoints)}</span><span class="dot"></span>`;
-  const track = $('.marquee-track');
-  track.innerHTML = item.repeat(8);
-  // Démarrage une fois le texte en place et la police chargée : la distance (-50 %) est alors la bonne,
-  // et la durée suit la longueur des prénoms pour garder une vitesse constante (≈ 40 px/s)
-  const startMarquee = () => {
-    track.classList.remove('is-on');
-    track.style.setProperty('--marquee-dur', `${Math.max(20, track.scrollWidth / 2 / 40)}s`);
-    void track.offsetWidth; // relance propre de l'animation
-    track.classList.add('is-on');
-  };
-  requestAnimationFrame(startMarquee);
-  if (document.fonts) document.fonts.ready.then(startMarquee);
-
-  // Programme
-  $('.timeline').innerHTML = (C.programme.items || []).map(it => `
-    <li class="reveal"><time>${esc(it.heure)}</time><div><h3>${esc(it.titre)}</h3><p>${esc(it.description)}</p></div></li>`).join('');
-
-  // Lieux
-  $('.places').innerHTML = (C.lieux.items || []).map(it => `
-    <article class="place reveal">
-      <p class="label">${esc(it.type)}</p>
-      <h3>${esc(it.nom)}</h3>
-      <address>${esc(it.adresse)}</address>
-      ${it.info ? `<p class="info">${esc(it.info)}</p>` : ''}
-      <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.nom + ' ' + it.adresse)}">Itinéraire</a>
-    </article>`).join('');
-
-  // Dress code
-  $('.swatches').innerHTML = (C.dressCode.couleurs || []).map(c => `<span class="reveal" style="background:${esc(c)}" title="${esc(c)}"></span>`).join('');
-  $('.swatches').classList.remove('reveal'); // ce sont les pastilles qui apparaissent une à une
-
-  // Galerie + visionneuse
-  $('.gallery').innerHTML = (C.galerie.photos || []).map(src => `<button type="button" class="reveal"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"${nbPhotos.has(src) ? ' class="nb"' : ''}></button>`).join('');
-  const lb = $('.lightbox');
-  $('.gallery').addEventListener('click', e => {
-    const img = e.target.closest('button')?.querySelector('img');
-    if (!img) return;
-    $('img', lb).src = img.src;
-    $('img', lb).classList.toggle('nb', img.classList.contains('nb')); // la visionneuse respecte le noir et blanc
-    lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false');
-  });
-  const closeLb = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); };
-  lb.addEventListener('click', e => { if (e.target !== $('img', lb)) closeLb(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLb(); toggleMenu(false); } });
-
-  // ---------- Compte à rebours ----------
-  const cd = $('.countdown');
-  if (C.hero.compteARebours && y) {
-    const withTime = !!C.hero.heure;
-    const target = new Date(`${C.hero.date}T${withTime ? C.hero.heure : '00:00'}:00`);
-    const dayEnd = new Date(`${C.hero.date}T23:59:59`);
-    const unit = (n, l) => `<div class="unit"><b>${n}</b><small>${l}</small></div>`;
-    const tick = () => {
-      const now = new Date();
-      const diff = target - now;
-      if (diff <= 0) {
-        cd.innerHTML = `<p class="msg">${now <= dayEnd ? 'C’est aujourd’hui !' : 'Merci d’avoir partagé ce jour avec nous'}</p>`;
-        return false;
-      }
-      const s = Math.floor(diff / 1000);
-      const days = Math.floor(s / 86400);
-      if (!withTime) {
-        cd.innerHTML = unit(days + 1, days + 1 > 1 ? 'Jours' : 'Jour');
-        return true;
-      }
-      const p = n => String(n).padStart(2, '0');
-      cd.innerHTML = [
-        unit(days, days > 1 ? 'Jours' : 'Jour'), '<span class="sep"></span>',
-        unit(p(Math.floor(s % 86400 / 3600)), 'Heures'), '<span class="sep"></span>',
-        unit(p(Math.floor(s % 3600 / 60)), 'Minutes'), '<span class="sep"></span>',
-        unit(p(s % 60), 'Secondes'),
-      ].join('');
-      return true;
-    };
-    if (tick()) { const t = setInterval(() => { if (!tick()) clearInterval(t); }, 1000); }
-  }
+  // =====================================================================
+  // Mise en place unique (indépendante du contenu)
+  // =====================================================================
 
   // ---------- Menu ----------
   const burger = $('.burger'), menu = $('.menu');
@@ -173,6 +53,24 @@
   burger.addEventListener('click', () => toggleMenu(!menu.classList.contains('open')));
   menuLinks.forEach(a => a.addEventListener('click', () => toggleMenu(false)));
 
+  // ---------- Commutateur clair / sombre ----------
+  // Sur le site, le choix du visiteur est mémorisé ; dans l'aperçu de l'admin, il ne l'est pas.
+  const modeSwitch = $('.mode-switch');
+  MBTheme.bindSwitch(modeSwitch, { scope: 'site', persist: !PREVIEW });
+
+  // ---------- Visionneuse ----------
+  const lb = $('.lightbox');
+  $('.gallery').addEventListener('click', e => {
+    const img = e.target.closest('button')?.querySelector('img');
+    if (!img) return;
+    $('img', lb).src = img.src;
+    $('img', lb).classList.toggle('nb', img.classList.contains('nb')); // la visionneuse respecte le noir et blanc
+    lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false');
+  });
+  const closeLb = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); };
+  lb.addEventListener('click', e => { if (e.target !== $('img', lb)) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLb(); toggleMenu(false); } });
+
   // ---------- Défilement doux vers les ancres (#rsvp, #programme…) ----------
   // Plus lent et plus souple que le défilement natif : accélération et décélération douces,
   // durée proportionnelle à la distance. Un geste de l'utilisateur (molette, doigt, clavier) l'interrompt.
@@ -181,13 +79,13 @@
   const stopScroll = () => { if (scrollAnim) cancelAnimationFrame(scrollAnim); scrollAnim = null; };
   ['wheel', 'touchstart', 'keydown'].forEach(ev => addEventListener(ev, stopScroll, { passive: true }));
 
-  function smoothScrollTo(target) {
+  function smoothScrollTo(target, maxDuration = 2200) {
     stopScroll();
     const from = scrollY;
     const to = Math.min(target.getBoundingClientRect().top + from, document.documentElement.scrollHeight - innerHeight);
     const dist = to - from;
     if (Math.abs(dist) < 2) return;
-    const duration = Math.min(2200, 900 + Math.abs(dist) * .25); // 0,9 s à 2,2 s
+    const duration = Math.min(maxDuration, 900 + Math.abs(dist) * .25); // 0,9 s à 2,2 s
     const start = performance.now();
     const step = now => {
       const t = Math.min(1, (now - start) / duration);
@@ -204,7 +102,7 @@
     const target = id && document.getElementById(id);
     if (!target) return;
     e.preventDefault();
-    history.pushState(null, '', `#${id}`);
+    if (!PREVIEW) history.pushState(null, '', `#${id}`);
     if (reduce) target.scrollIntoView();
     else requestAnimationFrame(() => smoothScrollTo(target)); // laisse le menu se fermer avant de partir
   });
@@ -212,7 +110,9 @@
   // ---------- Défilement : en-tête, bouton flottant, parallax ----------
   const topbar = $('.topbar'), toTopBtn = $('.to-top'), hero = $('.hero');
   const parallax = $$('.parallax');
-  const toTopDark = $('.to-top-dark'), lightSections = $$('section.ivory'); // sections à fond clair
+  const toTopDark = $('.to-top-dark');
+  const lightSections = $$('section.ivory');                                           // fonds clairs en mode sombre
+  const lightSectionsLightMode = $$('main > section:not(.hero):not(.fullbleed), .marquee'); // fonds clairs en mode clair
   // Une seule mise à jour par image affichée (le scroll peut déclencher des dizaines d'événements par image)
   let scrollQueued = false;
   function onScroll() {
@@ -224,15 +124,17 @@
       topbar.classList.toggle('scrolled', sy > 40);
       // Retour en haut : visible dès qu'on a quitté l'accueil
       toTopBtn.classList.toggle('show', sy > hero.offsetHeight * .8);
-      // Partie du bouton au-dessus d'une section claire → jumeau noir visible sur cette bande seulement
+      // Partie du bouton au-dessus d'un fond clair → jumeau noir visible sur cette bande seulement.
+      // Fonds clairs : sections ivoire, et en mode clair toutes les sections sauf les photos plein écran.
       const b = toTopBtn.getBoundingClientRect();
-      let clip = 'inset(0 0 100% 0)'; // par défaut : entièrement blanc
-      for (const s of lightSections) {
+      const zones = root.dataset.mode === 'light' ? lightSectionsLightMode : lightSections;
+      let top = Infinity, bottom = -Infinity; // union des zones claires sous le bouton (souvent contiguës)
+      for (const s of zones) {
         const r = s.getBoundingClientRect();
-        const top = Math.max(r.top, b.top), bottom = Math.min(r.bottom, b.bottom);
-        if (bottom > top) { clip = `inset(${top - b.top}px 0 ${b.bottom - bottom}px 0)`; break; }
+        const t = Math.max(r.top, b.top), bo = Math.min(r.bottom, b.bottom);
+        if (bo > t) { top = Math.min(top, t); bottom = Math.max(bottom, bo); }
       }
-      toTopDark.style.clipPath = clip;
+      toTopDark.style.clipPath = bottom > top ? `inset(${top - b.top}px 0 ${b.bottom - bottom}px 0)` : 'inset(0 0 100% 0)';
       if (!reduce) parallax.forEach(el => {
         const r = el.parentElement.getBoundingClientRect();
         if (r.bottom > 0 && r.top < innerHeight) el.style.transform = `translate3d(0, ${(r.top + r.height / 2 - innerHeight / 2) * -0.12}px, 0)`;
@@ -264,15 +166,24 @@
       io.unobserve(e.target);
     });
   }, { threshold: .1, rootMargin: '0px 0px -8% 0px' });
-  $$('.reveal').forEach((el, i) => {
-    const m = motionOf(el);
-    if (m) el.classList.add(m);
-    if (!el.closest('.hero')) return io.observe(el);
-    requestAnimationFrame(() => requestAnimationFrame(() => reveal(el, .2 + i * .12)));
-  });
+  // Observe les éléments pas encore apparus (appelé après chaque rendu : de nouveaux éléments peuvent arriver)
+  let heroIndex = 0;
+  function watchReveals() {
+    $$('.reveal:not(.in):not([data-rv])').forEach(el => {
+      el.dataset.rv = '1';
+      const m = motionOf(el);
+      if (m) el.classList.add(m);
+      if (PREVIEW) return el.classList.add('in'); // aperçu : tout est visible tout de suite
+      if (!el.closest('.hero')) return io.observe(el);
+      const i = heroIndex++;
+      requestAnimationFrame(() => requestAnimationFrame(() => reveal(el, .2 + i * .12)));
+    });
+  }
 
   // ---------- Ajouter au calendrier (.ics) ----------
   $('[data-ics]').addEventListener('click', () => {
+    if (!C) return;
+    const [y, m, d] = (C.hero.date || '').split('-').map(Number);
     if (!y) return;
     const pad = n => String(n).padStart(2, '0');
     const ymd = `${y}${pad(m)}${pad(d)}`;
@@ -290,17 +201,156 @@
     a.click();
   });
 
-  // ---------- RSVP ----------
-  const body = $('.rsvp-body');
-  const R = C.rsvp;
-  const params = new URLSearchParams(location.search);
-  const invite = await MariageStore.getInvite(params.get('invite')).catch(() => null);
-  const max = invite ? invite.max_personnes : (R.maxParDefaut || 2);
-  const closed = R.dateLimite && new Date() > new Date(R.dateLimite + 'T23:59:59');
+  // =====================================================================
+  // Rendu (rappelé à chaque modification dans l'aperçu)
+  // =====================================================================
+  const value = path => (path in derived ? derived[path] : get(C, path));
 
-  if (closed) {
-    body.innerHTML = `<div class="rsvp-closed"><h3>Les réponses sont closes</h3><p>Pour toute question, contactez directement les mariés.</p></div>`;
-  } else {
+  function render(content) {
+    C = content;
+    const [y, m, d] = (C.hero.date || '').split('-').map(Number);
+    derived = {
+      datePoints: y ? `${String(d).padStart(2, '0')} · ${String(m).padStart(2, '0')} · ${y}` : '',
+      dateLongue: y ? `${d} ${MOIS[m - 1]} ${y}` : '',
+    };
+    document.title = `${C.couple.prenom1} & ${C.couple.prenom2}${derived.dateLongue ? ` — ${derived.dateLongue}` : ''}`;
+
+    // ---------- Apparence : thème, mode, commutateur ----------
+    const app = MBTheme.normalize(C.apparence);
+    MBTheme.apply({ theme: app.theme, mode: MBTheme.resolveMode(app, 'site') }, { fade: PREVIEW });
+    modeSwitch.hidden = !app.afficherCommutateur;
+    if (!PREVIEW) MBTheme.remember(app);
+
+    // ---------- Textes et photos ----------
+    const nbPhotos = new Set(C.photos?.nb || []);      // noir et blanc photo par photo (admin : bouton ◐)
+    const focus = C.photos?.focus || {};               // point focal par photo (« 50% 30% »)
+    const photo = (el, url) => {
+      el.classList.toggle('nb', nbPhotos.has(url));
+      if (focus[url]) el.style.setProperty('--focus', focus[url]); else el.style.removeProperty('--focus');
+    };
+    $$('[data-c]').forEach(el => { el.textContent = value(el.dataset.c) ?? ''; });
+    $$('[data-src]').forEach(el => { const v = value(el.dataset.src); if (v) { if (el.getAttribute('src') !== v) el.src = v; photo(el, v); } });
+    $$('[data-bg]').forEach(el => { const v = value(el.dataset.bg); if (v) { el.style.backgroundImage = `url("${v}")`; photo(el, v); } });
+    $('.hero-veil').style.setProperty('--veil', C.hero.assombrissement ?? .6);
+    root.classList.toggle('photos-nb', !!C.photos?.noirEtBlanc); // toutes les photos en noir et blanc
+    // Mémorise la photo d'accueil : à la prochaine visite, index.html la précharge avant même d'avoir le contenu
+    if (!PREVIEW) try { if (C.hero.fond && !/^(data|blob):/.test(C.hero.fond)) localStorage.setItem('mariage.heroFond', C.hero.fond); } catch {}
+
+    // ---------- Identité : monogramme, sceau, favicon ----------
+    const [i1, i2] = (C.couple.initiales || '').split('|').map(s => s.trim());
+    const pair = i2 !== undefined;
+    $$('[data-mono]').forEach(el => {
+      el.innerHTML = `<span class="mono">${pair ? `${esc(i1)}<i aria-hidden="true"></i>${esc(i2)}` : esc(C.couple.initiales)}</span>`;
+    });
+    // Logo du footer : initiales croisées par un filet doré, posées sur le cercle de verre
+    const seal = $('[data-seal]');
+    if (seal) {
+      const center = pair
+        ? `<text class="initial" x="112" y="150" text-anchor="middle">${esc(i1)}</text>
+           <line class="rule" x1="118" y1="212" x2="182" y2="88"/>
+           <text class="initial" x="189" y="210" text-anchor="middle">${esc(i2)}</text>`
+        : `<text class="initial" x="150" y="180" text-anchor="middle">${esc(C.couple.initiales)}</text>`;
+      seal.innerHTML = `<svg class="seal" viewBox="0 0 300 300" role="img" aria-label="${esc(`${C.couple.prenom1} & ${C.couple.prenom2}`)}">${center}</svg>`;
+    }
+    MariageStore.setFavicon(C.couple.initiales); // favicon aux initiales (même fonction que l'admin)
+
+    // ---------- Sections activées dans l'admin ----------
+    $$('[data-section]').forEach(el => el.classList.toggle('is-off', !(C[el.dataset.section] || {}).active));
+    $$('[data-section-link]').forEach(el => { el.hidden = !(C[el.dataset.sectionLink] || {}).active; });
+    $$('[data-rsvp-link]').forEach(el => { el.hidden = !C.rsvp.active; });
+
+    // ---------- Bandeau défilant ----------
+    const item = `<span>${esc(C.couple.prenom1)} <em>&amp;</em> ${esc(C.couple.prenom2)}</span><span class="dot"></span><span class="date">${esc(derived.datePoints)}</span><span class="dot"></span>`;
+    const track = $('.marquee-track');
+    if (track.dataset.item !== item) {
+      track.dataset.item = item;
+      track.innerHTML = item.repeat(8);
+      // Démarrage une fois le texte en place et la police chargée : la distance (-50 %) est alors la bonne,
+      // et la durée suit la longueur des prénoms pour garder une vitesse constante (≈ 40 px/s)
+      const startMarquee = () => {
+        track.classList.remove('is-on');
+        track.style.setProperty('--marquee-dur', `${Math.max(20, track.scrollWidth / 2 / 40)}s`);
+        void track.offsetWidth; // relance propre de l'animation
+        track.classList.add('is-on');
+      };
+      requestAnimationFrame(startMarquee);
+      if (document.fonts) document.fonts.ready.then(startMarquee);
+    }
+
+    // ---------- Programme ----------
+    $('.timeline').innerHTML = (C.programme.items || []).map(it => `
+      <li class="reveal"><time>${esc(it.heure)}</time><div><h3>${esc(it.titre)}</h3><p>${esc(it.description)}</p></div></li>`).join('');
+
+    // ---------- Lieux ----------
+    $('.places').innerHTML = (C.lieux.items || []).map(it => `
+      <article class="place reveal">
+        <p class="label">${esc(it.type)}</p>
+        <h3>${esc(it.nom)}</h3>
+        <address>${esc(it.adresse)}</address>
+        ${it.info ? `<p class="info">${esc(it.info)}</p>` : ''}
+        <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.nom + ' ' + it.adresse)}">Itinéraire</a>
+      </article>`).join('');
+
+    // ---------- Dress code ----------
+    $('.swatches').innerHTML = (C.dressCode.couleurs || []).map(c => `<span class="reveal" style="background:${esc(c)}" title="${esc(c)}"></span>`).join('');
+    $('.swatches').classList.remove('reveal'); // ce sont les pastilles qui apparaissent une à une
+
+    // ---------- Galerie ----------
+    $('.gallery').innerHTML = (C.galerie.photos || []).map(src =>
+      `<button type="button" class="reveal"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"${nbPhotos.has(src) ? ' class="nb"' : ''}${focus[src] ? ` style="--focus:${esc(focus[src])}"` : ''}></button>`).join('');
+
+    renderCountdown(y);
+    renderRsvp();
+    watchReveals();
+    onScroll();
+  }
+
+  // ---------- Compte à rebours ----------
+  function renderCountdown(y) {
+    clearInterval(countdownTimer);
+    const cd = $('.countdown');
+    cd.innerHTML = '';
+    if (!C.hero.compteARebours || !y) return;
+    const withTime = !!C.hero.heure;
+    const target = new Date(`${C.hero.date}T${withTime ? C.hero.heure : '00:00'}:00`);
+    const dayEnd = new Date(`${C.hero.date}T23:59:59`);
+    const unit = (n, l) => `<div class="unit"><b>${n}</b><small>${l}</small></div>`;
+    const tick = () => {
+      const now = new Date();
+      const diff = target - now;
+      if (diff <= 0) {
+        cd.innerHTML = `<p class="msg">${now <= dayEnd ? 'C’est aujourd’hui !' : 'Merci d’avoir partagé ce jour avec nous'}</p>`;
+        return false;
+      }
+      const s = Math.floor(diff / 1000);
+      const days = Math.floor(s / 86400);
+      if (!withTime) {
+        cd.innerHTML = unit(days + 1, days + 1 > 1 ? 'Jours' : 'Jour');
+        return true;
+      }
+      const p = n => String(n).padStart(2, '0');
+      cd.innerHTML = [
+        unit(days, days > 1 ? 'Jours' : 'Jour'), '<span class="sep"></span>',
+        unit(p(Math.floor(s % 86400 / 3600)), 'Heures'), '<span class="sep"></span>',
+        unit(p(Math.floor(s % 3600 / 60)), 'Minutes'), '<span class="sep"></span>',
+        unit(p(s % 60), 'Secondes'),
+      ].join('');
+      return true;
+    };
+    if (tick()) countdownTimer = setInterval(() => { if (!tick()) clearInterval(countdownTimer); }, 1000);
+  }
+
+  // ---------- RSVP ----------
+  function renderRsvp() {
+    const body = $('.rsvp-body');
+    const R = C.rsvp;
+    const max = invite ? invite.max_personnes : (R.maxParDefaut || 2);
+    const closed = R.dateLimite && new Date() > new Date(R.dateLimite + 'T23:59:59');
+
+    if (closed) {
+      body.innerHTML = `<div class="rsvp-closed"><h3>Les réponses sont closes</h3><p>Pour toute question, contactez directement les mariés.</p></div>`;
+      return;
+    }
     const opts = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? 'personnes' : 'personne'}</option>`).join('');
     const moments = (R.moments || []).map(mo => `<label class="choice"><input type="checkbox" name="moments" value="${esc(mo)}" checked><span>${esc(mo)}</span></label>`).join('');
     // Questions personnalisées (admin > Formulaire RSVP) : texte libre ou liste déroulante
@@ -343,6 +393,7 @@
         <label class="field"><span>Un mot pour les mariés</span><textarea name="message" rows="3"></textarea></label>
         <p class="form-error" role="alert"></p>
         <button class="btn btn-solid" type="submit">Envoyer ma réponse</button>
+        ${PREVIEW ? '<p class="preview-note">Aperçu : le formulaire n’envoie rien.</p>' : ''}
       </form>`;
 
     const form = $('form', body), att = $('.attending', form), err = $('.form-error', form);
@@ -361,15 +412,15 @@
       if (e.target !== el || e.propertyName !== 'height' || el.classList.contains('is-closed')) return;
       el.style.height = ''; el.classList.add('is-done');
     }));
-    const sync = () => {
+    form.addEventListener('change', () => {
       fold(att, form.present.value === 'oui');
       fold($('.accomp', form), Number(form.nb_personnes.value) >= 2);
-    };
-    form.addEventListener('change', sync);
+    });
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
       err.textContent = '';
+      if (PREVIEW) return (err.textContent = 'Aperçu : rien n’est envoyé.');
       if (form.nom.value.trim().length < 2) return (err.textContent = 'Merci d’indiquer votre nom.');
       if (!form.present.value) return (err.textContent = 'Merci de nous dire si vous serez présent·e.');
       const yes = form.present.value === 'oui';
@@ -407,6 +458,35 @@
       }
     });
   }
+
+  // =====================================================================
+  // Démarrage
+  // =====================================================================
+  if (PREVIEW) {
+    // Aperçu : l'admin (même origine) envoie son brouillon ; la section en cours d'édition est amenée à l'écran
+    const SECTIONS = { accueil: '#accueil', histoire: '#histoire', grandJour: '[data-section="grandJour"]', programme: '#programme',
+      lieux: '#lieux', dressCode: '#dresscode', galerie: '#galerie', rsvp: '#rsvp', footer: '.footer' };
+    let lastSection = null;
+    addEventListener('message', e => {
+      if (e.origin !== location.origin || e.data?.type !== 'mb:apercu') return;
+      render(e.data.content);
+      if (e.data.mode === 'dark' || e.data.mode === 'light') MBTheme.apply({ mode: e.data.mode }, { fade: true }); // mode choisi dans l'admin
+      document.body.classList.remove('is-loading');
+      if (e.data.section && e.data.section !== lastSection) {
+        lastSection = e.data.section;
+        const target = SECTIONS[e.data.section] && $(SECTIONS[e.data.section]);
+        if (target) requestAnimationFrame(() => (reduce ? target.scrollIntoView() : smoothScrollTo(target, 900)));
+      }
+    });
+    parent.postMessage({ type: 'mb:apercu-pret' }, location.origin === 'null' ? '*' : location.origin); // fichier local : pas d'origine
+    return;
+  }
+
+  let content;
+  try { content = await MariageStore.loadContent(); }
+  catch (e) { console.error(e); content = window.MARIAGE_DEFAULT; }
+  invite = await MariageStore.getInvite(new URLSearchParams(location.search).get('invite')).catch(() => null);
+  render(content);
 
   document.body.classList.remove('is-loading');
   // Le contenu est injecté après le chargement : on rejoint l'ancre une fois la page construite

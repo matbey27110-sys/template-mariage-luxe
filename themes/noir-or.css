@@ -45,7 +45,7 @@
   --jour-surface: #F4EDE2;
   --jour-ink: #000000;
   --jour-ink-soft: #5C4F43;
-  --jour-muted: #8B7A69;
+  --jour-muted: #6E6053;
   --jour-accent: #8A1C24;
   --jour-accent-soft: #8A1C24;
   --jour-line: rgba(0, 0, 0, .14);
@@ -68,18 +68,18 @@
   --nuit-surface: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 45%), #EFE6D8;
   --nuit-ink: #000000;
   --nuit-ink-soft: #4E4338;
-  --nuit-muted: #7A6A5B;
-  --nuit-accent: #A8884B;          /* or plus foncé pour rester lisible sur fond clair */
-  --nuit-accent-soft: #8C6E35;
+  --nuit-muted: #776759;
+  --nuit-accent: #7F6739;          /* or plus foncé pour rester lisible sur fond clair */
+  --nuit-accent-soft: #816531;
   --nuit-line: rgba(168, 136, 75, .5);
   --nuit-error: #8A1C24;
-  --nuit-on-accent: #000000;
+  --nuit-on-accent: #FFFFFF; /* texte sur l'or foncé : blanc pour le contraste AA */
 
   --jour-bg: #E9E0D2;
   --jour-surface: #F4EDE2;
   --jour-ink: #000000;
   --jour-ink-soft: #4E4338;
-  --jour-muted: #7A6A5B;
+  --jour-muted: #6E6052;
   --jour-accent: #8A1C24;
   --jour-accent-soft: #8A1C24;
   --jour-line: rgba(0, 0, 0, .14);

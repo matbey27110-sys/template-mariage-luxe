@@ -1,0 +1,85 @@
+/* ============================================================
+   Thème « Bordeaux » — Maison Rouge, velours
+   Fonds bordeaux nuit, accents or champagne. Le noir éventuel reste #000000.
+   Polices : Bodoni Moda (titres) · Cormorant Garamond italique (accents) · Jost (texte).
+   ============================================================ */
+[data-theme="bordeaux"] {
+  --f-logo: 'Bodoni Moda', 'Didot', serif;
+  --f-display: 'Cormorant Garamond', 'Garamond', serif;
+  --f-sans: 'Jost', 'Helvetica Neue', sans-serif;
+  --radius: 2px;
+
+  --photo-ink: #F4EDE2;
+  --photo-ink-soft: #E9E0D2;
+  --photo-muted: #A38D7B;
+  --photo-accent: #C8A86B;
+  --photo-accent-soft: #E6CF9C;
+  --photo-line: rgba(230, 207, 156, .5);
+  --photo-on-accent: #000000;
+}
+
+[data-theme="bordeaux"][data-mode="dark"] {
+  --nuit-bg: #3A0A0E;
+  --nuit-surface: linear-gradient(180deg, rgba(138, 28, 36, .45), rgba(94, 11, 18, .25) 60%), #3A0A0E;
+  --nuit-ink: #F4EDE2;
+  --nuit-ink-soft: #E9E0D2;
+  --nuit-muted: #B39A86;
+  --nuit-accent: #C8A86B;
+  --nuit-accent-soft: #E6CF9C;
+  --nuit-line: rgba(200, 168, 107, .45);
+  --nuit-error: #F0B4B4;
+  --nuit-on-accent: #000000;
+
+  --jour-bg: #E9E0D2;
+  --jour-surface: #F4EDE2;
+  --jour-ink: #000000;
+  --jour-ink-soft: #5A3A36;
+  --jour-muted: #6E6053;
+  --jour-accent: #5E0B12;
+  --jour-accent-soft: #5E0B12;
+  --jour-line: rgba(94, 11, 18, .18);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(58, 10, 14, .86);
+  --bar-ink: #F4EDE2;
+  --bar-accent: #C8A86B;
+  --bar-line: rgba(230, 207, 156, .5);
+
+  --signature-glow: rgba(138, 28, 36, .55);
+  --grain: .07;
+  --theme-color: #3A0A0E;
+}
+
+[data-theme="bordeaux"][data-mode="light"] {
+  --nuit-bg: #E9E0D2;
+  --nuit-surface: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 45%), #F4EDE2;
+  --nuit-ink: #000000;
+  --nuit-ink-soft: #4E3330;
+  --nuit-muted: #6E6052;
+  --nuit-accent: #755F34;
+  --nuit-accent-soft: #5E0B12;
+  --nuit-line: rgba(94, 11, 18, .3);
+  --nuit-error: #8A1C24;
+  --nuit-on-accent: #FFFFFF; /* texte sur l'or foncé : blanc pour le contraste AA */
+
+  --jour-bg: #F4EDE2;
+  --jour-surface: #FFFFFF;
+  --jour-ink: #000000;
+  --jour-ink-soft: #4E3330;
+  --jour-muted: #776759;
+  --jour-accent: #5E0B12;
+  --jour-accent-soft: #5E0B12;
+  --jour-line: rgba(94, 11, 18, .18);
+  --jour-error: #8A1C24;
+  --jour-on-accent: #F4EDE2;
+
+  --bar-bg: rgba(233, 224, 210, .88);
+  --bar-ink: #000000;
+  --bar-accent: #5E0B12;
+  --bar-line: rgba(94, 11, 18, .35);
+
+  --signature-glow: rgba(94, 11, 18, .12);
+  --grain: .035;
+  --theme-color: #E9E0D2;
+}

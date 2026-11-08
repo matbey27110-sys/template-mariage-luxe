@@ -1,19 +1,28 @@
+// Back-office « Espace mariés ».
+// Principe : on travaille sur un BROUILLON (content). La version PUBLIÉE (published) n'est remplacée
+// qu'au clic sur « Enregistrer ». Chaque modification est envoyée à l'aperçu en direct (iframe du vrai site).
+// Les photos choisies restent sur l'ordinateur (adresse blob:) et ne sont envoyées à Supabase qu'à l'enregistrement.
 (function () {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const get = (o, p) => p.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
   const set = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => (a[k] ??= {}), o)[last] = v; };
+  const clone = o => structuredClone(o);
   // Les chemins d'images du contenu sont relatifs à la racine du site
   const src = s => (!s || /^(https?:|data:|blob:|\/)/.test(s) ? s : '../' + s);
   const S = MariageStore;
+  const root = document.documentElement;
+  const ORIGIN = location.origin === 'null' ? '*' : location.origin; // fichier local : pas d'origine
 
-  let content = null;
+  let content = null;      // brouillon en cours d'édition
+  let published = null;    // dernière version enregistrée
   let dirty = false;
   let current = 'accueil';
+  const pending = new Map(); // photos pas encore envoyées : adresse blob: → fichier
 
   // ---------- Description des écrans ----------
-  // [chemin, libellé, type, aide]
+  // [chemin, libellé, type, aide, extra, modèle, condition]
   const TABS = [
     { id: 'accueil', label: 'Accueil', hint: 'Prénoms, date, compte à rebours et image d’en-tête.', groups: [
       { title: 'Les mariés', fields: [
@@ -108,7 +117,14 @@
         ['footer.photo', 'Photo de fond', 'image'],
       ] },
     ] },
-    { id: 'apparence', label: 'Apparence', hint: 'Rendu des photos sur tout le site.', groups: [
+    { id: 'apparence', label: 'Apparence', hint: 'Thème du site, mode clair / sombre et rendu des photos.', groups: [
+      { title: 'Thème', fields: [['apparence.theme', '', 'themes']] },
+      { title: 'Clair / sombre', fields: [
+        ['apparence.modeParDefaut', 'Mode à l’ouverture du site', 'select', 'À la première visite. Ensuite, chaque invité garde son choix s’il utilise le commutateur.',
+          [['dark', 'Sombre'], ['light', 'Clair'], ['auto', 'Selon le réglage de l’appareil']]],
+        ['apparence.afficherCommutateur', 'Afficher le commutateur clair / sombre aux invités', 'toggle',
+          'Désactivé : le site reste toujours dans le mode choisi ci-dessus.'],
+      ] },
       { title: 'Photos', fields: [
         ['photos.noirEtBlanc', 'Afficher toutes les photos en noir et blanc', 'toggle',
           'S’applique à toutes les photos du site, y compris celles que vous importez. Désactivé, chaque photo suit son propre réglage (bouton ◐ sur chaque photo). Vos fichiers restent en couleur.'],
@@ -126,12 +142,14 @@
     clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
   }
 
-  function markDirty() {
-    dirty = true;
-    $('.save').disabled = false;
-    $('.save-state').textContent = 'Modifications non enregistrées';
-    $('.save-state').classList.add('dirty');
+  function setDirty(on) {
+    dirty = on;
+    $('.save').disabled = !on;
+    $('.cancel').disabled = !on;
+    $('.save-state').textContent = on ? 'Modifications non enregistrées' : '';
+    $('.save-state').classList.toggle('dirty', on);
   }
+  function markDirty() { setDirty(true); sendPreview(); }
 
   // Redimensionne avant envoi : photos plus légères, site plus rapide
   function compress(file) {
@@ -161,17 +179,27 @@
     });
   }
 
-  async function upload(files, host) {
-    host?.classList.add('uploading');
-    try {
-      const urls = [];
-      for (const f of files) urls.push(await S.uploadPhoto(await compress(f)));
-      return urls;
-    } catch (e) {
-      toast(e.message || 'Envoi de la photo impossible', true);
-      return [];
-    } finally { host?.classList.remove('uploading'); }
+  // Photo choisie : affichée tout de suite (adresse blob:) dans l'éditeur ET dans l'aperçu,
+  // sans rien envoyer. L'envoi vers Supabase n'a lieu qu'au clic sur « Enregistrer ».
+  function stage(files) {
+    return files.filter(f => f.type.startsWith('image/')).map(f => {
+      const url = URL.createObjectURL(f);
+      pending.set(url, f);
+      return url;
+    });
   }
+
+  // Remplace partout une adresse par une autre (valeurs, listes, et clés de photos.focus)
+  function replaceUrl(obj, from, to) {
+    if (Array.isArray(obj)) obj.forEach((v, i) => { if (v === from) obj[i] = to; else if (v && typeof v === 'object') replaceUrl(v, from, to); });
+    else if (obj && typeof obj === 'object') {
+      for (const k of Object.keys(obj)) {
+        if (obj[k] === from) obj[k] = to; else if (obj[k] && typeof obj[k] === 'object') replaceUrl(obj[k], from, to);
+        if (k === from) { obj[to] = obj[k]; delete obj[k]; }
+      }
+    }
+  }
+  const usedStrings = obj => { const used = new Set(); const walk = v => { if (typeof v === 'string') used.add(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); }; walk(obj); return used; };
 
   // ---------- Animations d'ajout / suppression ----------
   // Même esprit que le formulaire du site : un élément ajouté se déplie comme un volet,
@@ -206,11 +234,11 @@
   }
   // Élément(s) à animer au prochain rendu : même objet parent, même chemin, indices [from, to[
   let revealNext = null;
-  const markReveal = (root, path, from, to = from + 1) => { revealNext = { root, path, from, to }; };
+  const markReveal = (rootObj, path, from, to = from + 1) => { revealNext = { root: rootObj, path, from, to }; };
   // Appelé pendant le rendu : anime les éléments ajoutés une fois le panneau en place (avant l'affichage)
-  function revealIn(root, path, items, anim) {
+  function revealIn(rootObj, path, items, anim) {
     const r = revealNext;
-    if (!r || r.root !== root || r.path !== path) return;
+    if (!r || r.root !== rootObj || r.path !== path) return;
     revealNext = null;
     queueMicrotask(() => items.slice(r.from, r.to).forEach(anim));
   }
@@ -233,23 +261,45 @@
     img?.classList.toggle('nb', on);
     markDirty();
   }
-  // À l'enregistrement : on oublie les photos qui ne sont plus utilisées nulle part
-  function pruneNb() {
-    const used = new Set();
-    const walk = v => { if (typeof v === 'string') used.add(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
-    walk({ ...content, photos: { ...content.photos, nb: [] } });
+
+  // ---------- Point focal ----------
+  // Un clic sur la photo choisit le point qui doit rester visible quand elle est recadrée (téléphone).
+  const focusMap = () => ((content.photos ??= {}).focus ??= {});
+  function focusPicker(url, imgHtml) {
+    const f = focusMap()[url];
+    const [x, y] = (f || '50% 50%').split(' ');
+    return `<span class="focus-pick" data-focus-url="${esc(url)}" title="Cliquez pour choisir le point à garder visible">${imgHtml}<i class="focus-dot" style="left:${x};top:${y}"></i></span>`;
+  }
+  document.addEventListener('click', e => {
+    const pick = e.target.closest('.focus-pick');
+    if (!pick || e.target.closest('button')) return;
+    const r = pick.getBoundingClientRect();
+    const x = Math.round(((e.clientX - r.left) / r.width) * 100), y = Math.round(((e.clientY - r.top) / r.height) * 100);
+    const v = `${Math.max(0, Math.min(100, x))}% ${Math.max(0, Math.min(100, y))}%`;
+    focusMap()[pick.dataset.focusUrl] = v;
+    const dot = $('.focus-dot', pick); dot.style.left = `${x}%`; dot.style.top = `${y}%`;
+    markDirty();
+  });
+
+  // À l'enregistrement : on oublie les réglages des photos qui ne sont plus utilisées nulle part
+  function pruneSettings() {
+    const used = usedStrings({ ...content, photos: { ...content.photos, nb: [], focus: {} } });
     content.photos.nb = nbList().filter(u => used.has(u));
+    const f = focusMap();
+    for (const k of Object.keys(f)) if (!used.has(k)) delete f[k];
   }
 
   // ---------- Champs ----------
-  function field([path, label, type, help, extra, blank], root = content, rerender) {
+  function field([path, label, type, help, extra, blank], rootObj = content, rerender) {
     const el = document.createElement('div');
-    el.className = 'f' + (['textarea', 'images', 'background', 'list', 'colors', 'strings'].includes(type) ? ' wide' : '');
-    const val = get(root, path);
+    el.className = 'f' + (['textarea', 'images', 'background', 'list', 'colors', 'strings', 'themes'].includes(type) ? ' wide' : '');
+    const val = get(rootObj, path);
     const update = v => {
-      set(root, path, v); markDirty();
+      set(rootObj, path, v);
       if (path === 'couple.initiales') renderBrand();
       if (path === 'photos.noirEtBlanc') document.body.classList.toggle('photos-nb', !!v); // aperçu immédiat des vignettes
+      if (path.startsWith('apparence.')) applyAppearance();
+      markDirty();
     };
     const redraw = rerender || renderPanel;
     const head = label ? `<span>${esc(label)}</span>` : '';
@@ -281,19 +331,20 @@
         break;
       }
       case 'range': {
-        el.innerHTML = `${head}<input type="range" min="0.2" max="0.95" step="0.05"><small>Plus fort = texte plus lisible</small>`;
+        el.innerHTML = `${head}<input type="range" min="0.2" max="0.95" step="0.05"><small>Plus fort = texte plus lisible. Le rendu s’affiche en direct dans l’aperçu.</small>`;
         const r = $('input', el); r.value = val ?? .7;
         r.addEventListener('input', () => update(Number(r.value)));
         break;
       }
       case 'image': {
-        el.innerHTML = `${head}<div class="img-field"><img class="thumb" alt=""><div class="img-actions">
+        el.innerHTML = `${head}<div class="img-field">${val ? focusPicker(val, '<img class="thumb" alt="">') : '<img class="thumb" alt="">'}<div class="img-actions">
           <button type="button" class="btn btn-ghost btn-sm" data-change>Changer la photo</button>
-          ${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Noir et blanc')}</div></div>${foot}`;
+          ${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Noir et blanc')}</div></div>
+          ${val ? '<small>Cliquez sur la photo pour choisir le point à garder visible sur téléphone.</small>' : ''}${foot}`;
         const thumb = $('img', el);
         thumb.src = src(val) || ''; thumb.classList.toggle('nb', isNb(val));
         $('[data-change]', el).addEventListener('click', async () => {
-          const [url] = await upload(await pickFiles(false), el);
+          const [url] = stage(await pickFiles(false));
           if (url) { update(url); redraw(); }
         });
         $('[data-nb]', el)?.addEventListener('click', e => toggleNb(val, e.currentTarget, thumb));
@@ -303,7 +354,7 @@
         const list = Array.isArray(val) ? val : [];
         const fixed = extra; // nombre fixe de photos (ex. trio)
         el.innerHTML = `${head}<div class="img-grid">${list.map((u, i) => `
-          <div class="img-tile"><img alt="" src="${esc(src(u))}" class="${isNb(u) ? 'nb' : ''}">
+          <div class="img-tile">${focusPicker(u, `<img alt="" src="${esc(src(u))}" class="${isNb(u) ? 'nb' : ''}">`)}
             <div class="tools">
               ${nbButton(u, '', '◐', i)}
               ${fixed ? '' : `<button type="button" data-a="left" data-i="${i}" title="Déplacer avant">←</button>`}
@@ -311,24 +362,24 @@
               ${fixed ? '' : `<button type="button" data-a="del" data-i="${i}" title="Supprimer">✕</button>`}
             </div></div>`).join('')}
           ${!fixed || list.length < fixed ? `<button type="button" class="add-tile"><b>+</b>Ajouter</button>` : ''}
-          </div>${foot}`;
-        revealIn(root, path, $$('.img-tile', el), popIn);
+          </div>${list.length ? '<small>Cliquez sur une photo pour choisir le point à garder visible.</small>' : ''}${foot}`;
+        revealIn(rootObj, path, $$('.img-tile', el), popIn);
         el.addEventListener('click', async e => {
           const b = e.target.closest('button'); if (!b) return;
           if (b.hasAttribute('data-nb')) return toggleNb(list[Number(b.dataset.i)], b, $('img', b.closest('.img-tile')));
           const arr = [...list];
           if (b.classList.contains('add-tile')) {
-            const urls = await upload(await pickFiles(!fixed), el);
+            const urls = stage(await pickFiles(!fixed));
             if (!urls.length) return;
             const next = fixed ? arr.concat(urls).slice(0, fixed) : arr.concat(urls);
-            markReveal(root, path, arr.length, next.length);
+            markReveal(rootObj, path, arr.length, next.length);
             update(next);
           } else {
             const i = Number(b.dataset.i);
             if (b.dataset.a === 'del') { await popOut(b.closest('.img-tile')); arr.splice(i, 1); }
             if (b.dataset.a === 'left' && i > 0) [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
             if (b.dataset.a === 'swap') {
-              const [url] = await upload(await pickFiles(false), el);
+              const [url] = stage(await pickFiles(false));
               if (!url) return;
               arr[i] = url;
             }
@@ -351,7 +402,7 @@
           const b = e.target.closest('button'); if (!b) return;
           if (b.hasAttribute('data-nb')) return toggleNb(val, b, $('.bg-choice.selected img', el));
           if (b.hasAttribute('data-upload')) {
-            const [url] = await upload(await pickFiles(false), el);
+            const [url] = stage(await pickFiles(false));
             if (!url) return;
             update(url);
           } else update(b.dataset.url);
@@ -365,7 +416,7 @@
           <label class="color"><input type="color" value="${esc(c)}" data-i="${i}"><code>${esc(c)}</code>
           <button type="button" class="icon-btn danger" data-del="${i}" aria-label="Supprimer">✕</button></label>`).join('')}
           <button type="button" class="btn btn-ghost btn-sm" data-add>+ Couleur</button></div>`;
-        revealIn(root, path, $$('.color', el), popIn);
+        revealIn(rootObj, path, $$('.color', el), popIn);
         el.addEventListener('input', e => {
           if (e.target.type !== 'color') return;
           list[e.target.dataset.i] = e.target.value.toUpperCase();
@@ -373,7 +424,7 @@
           update([...list]);
         });
         el.addEventListener('click', async e => {
-          if (e.target.closest('[data-add]')) { markReveal(root, path, list.length); update([...list, '#C8A86B']); redraw(); }
+          if (e.target.closest('[data-add]')) { markReveal(rootObj, path, list.length); update([...list, '#C8A86B']); redraw(); }
           const d = e.target.closest('[data-del]');
           if (d) { e.preventDefault(); await popOut(d.closest('.color')); list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
         });
@@ -386,10 +437,10 @@
           <button type="button" class="icon-btn danger" data-del="${i}" aria-label="Supprimer">✕</button></div>`).join('')}
           <div><button type="button" class="btn btn-ghost btn-sm" data-add>+ Ajouter</button></div></div>${foot}`;
         // Nouvelle ligne : se déplie et reçoit directement le curseur
-        revealIn(root, path, $$('.string-row', el), row => { unfold(row); $('input', row).focus({ preventScroll: true }); });
+        revealIn(rootObj, path, $$('.string-row', el), row => { unfold(row); $('input', row).focus({ preventScroll: true }); });
         el.addEventListener('input', e => { if (e.target.dataset.i != null) { list[e.target.dataset.i] = e.target.value; update([...list]); } });
         el.addEventListener('click', async e => {
-          if (e.target.closest('[data-add]')) { markReveal(root, path, list.length); update([...list, '']); redraw(); }
+          if (e.target.closest('[data-add]')) { markReveal(rootObj, path, list.length); update([...list, '']); redraw(); }
           const d = e.target.closest('[data-del]');
           if (d) { await foldAway(d.closest('.string-row')); list.splice(Number(d.dataset.del), 1); update([...list]); redraw(); }
         });
@@ -417,7 +468,7 @@
           });
           el.append(card);
         });
-        revealIn(root, path, $$(':scope > .item', el), card => {
+        revealIn(rootObj, path, $$(':scope > .item', el), card => {
           // Le nouvel élément reste visible : on le fait entrer dans l'écran s'il apparaît plus bas
           const r = card.getBoundingClientRect(); // mesuré avant l'animation (hauteur finale)
           unfold(card);
@@ -426,14 +477,103 @@
         const add = document.createElement('button');
         add.type = 'button'; add.className = 'btn btn-ghost btn-sm'; add.textContent = '+ Ajouter';
         add.style.justifySelf = 'start';
-        add.addEventListener('click', () => { list.push(structuredClone(blank)); /* copie profonde : chaque élément a ses propres listes */ markReveal(root, path, list.length - 1); update(list); redraw(); });
+        add.addEventListener('click', () => { list.push(clone(blank)); /* copie profonde : chaque élément a ses propres listes */ markReveal(rootObj, path, list.length - 1); update(list); redraw(); });
         el.append(add);
-        set(root, path, list);
+        set(rootObj, path, list);
+        break;
+      }
+      case 'themes': {
+        // Une carte par thème : miniature du hero (photo d'accueil réelle), nom, ambiance, pastilles, polices
+        const hero = src(content.hero.fond) || '';
+        const [p1, p2] = [content.couple.prenom1, content.couple.prenom2];
+        el.innerHTML = `<div class="themes" role="radiogroup" aria-label="Thème du site">${MBTheme.THEMES.map(t => `
+          <button type="button" class="theme-card" role="radio" aria-checked="${t.id === val}" data-theme-id="${esc(t.id)}">
+            <span class="theme-thumb" style="--thumb-bg:url('${esc(hero)}');--thumb-accent:${t.pastilles[2]};--thumb-fade:${t.pastilles[0]}">
+              <span><b style="font-family:'${esc(t.polices.titre)}',serif">${esc(p1)} <i>&amp;</i><br>${esc(p2)}</b><small>14 · 06</small></span>
+            </span>
+            <span class="theme-name">${esc(t.nom)}${t.modeConseille === 'light' ? '<em>Clair</em>' : ''}</span>
+            <span class="theme-meta">${esc(t.ambiance)} · ${esc(t.polices.titre)} &amp; ${esc(t.polices.texte)}</span>
+            <span class="swatch-row">${t.pastilles.map(c => `<span style="background:${c}"></span>`).join('')}</span>
+          </button>`).join('')}</div>
+          <small>Un clic applique le thème à l’aperçu et à cet espace. Rien n’est publié avant « Enregistrer ».</small>`;
+        // Polices des miniatures
+        MBTheme.THEMES.forEach(t => MBTheme.loadFonts(t.id));
+        el.addEventListener('click', e => {
+          const card = e.target.closest('.theme-card'); if (!card) return;
+          const t = MBTheme.findTheme(card.dataset.themeId);
+          // Thème clair par nature (Ivoire) : on propose son mode conseillé
+          if (t.modeConseille && content.apparence.modeParDefaut !== 'auto') content.apparence.modeParDefaut = t.modeConseille;
+          update(t.id);
+          redraw();
+        });
         break;
       }
     }
     return el;
   }
+
+  // ---------- Apparence de l'admin (thème du couple + mode de l'admin) ----------
+  function applyAppearance(fade = true) {
+    const app = MBTheme.normalize(content.apparence);
+    content.apparence = app;
+    MBTheme.apply({ theme: app.theme, mode: MBTheme.resolveMode(app, 'admin') }, { fade }); // pas de fondu à l'ouverture
+    setPreviewMode(app.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : app.modeParDefaut);
+  }
+
+  // =====================================================================
+  // Aperçu en direct
+  // =====================================================================
+  const frame = $('.preview iframe');
+  const device = $('.preview-device');
+  const DEVICES = { mobile: 375, tablet: 768, desktop: 1280 };
+  let previewReady = false;
+  let previewMode = 'dark';
+  let previewQueued = false;
+
+  // Envoie le brouillon à l'iframe (au plus une fois par image affichée)
+  function sendPreview() {
+    if (!previewReady || previewQueued || !content) return; // l'aperçu attend que le contenu soit chargé
+    previewQueued = true;
+    requestAnimationFrame(() => {
+      previewQueued = false;
+      frame.contentWindow?.postMessage({ type: 'mb:apercu', content, section: current, mode: previewMode }, ORIGIN);
+    });
+  }
+  addEventListener('message', e => {
+    if (e.source !== frame.contentWindow || e.data?.type !== 'mb:apercu-pret') return;
+    previewReady = true;
+    sendPreview();
+  });
+
+  // Taille d'écran : l'appareil garde sa vraie largeur et il est réduit pour tenir dans la colonne
+  function fitDevice() {
+    const stage = $('.preview-stage');
+    const w = DEVICES[device.dataset.device || 'mobile'];
+    const scale = Math.min(1, (stage.clientWidth - 8) / w);
+    device.style.setProperty('--dev-w', `${w}px`);
+    device.style.setProperty('--dev-scale', scale);
+    device.style.setProperty('--dev-h', `${Math.max(320, stage.clientHeight / scale)}px`);
+  }
+  $$('[data-device]').forEach(b => b.addEventListener('click', () => {
+    $$('[data-device]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    device.dataset.device = b.dataset.device;
+    fitDevice();
+  }));
+  function setPreviewMode(mode) {
+    previewMode = mode;
+    $$('[data-preview-mode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.previewMode === mode)));
+    sendPreview();
+  }
+  $$('[data-preview-mode]').forEach(b => b.addEventListener('click', () => setPreviewMode(b.dataset.previewMode)));
+  addEventListener('resize', () => { measureBar(); fitDevice(); });
+  const measureBar = () => document.body.style.setProperty('--bar-h', `${$('.bar').offsetHeight}px`);
+
+  // Téléphone : onglets Modifier / Aperçu
+  $$('[data-view]').forEach(b => b.addEventListener('click', () => {
+    $$('[data-view]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    $('.workspace').dataset.view = b.dataset.view;
+    if (b.dataset.view === 'preview') requestAnimationFrame(fitDevice);
+  }));
 
   // ---------- Rendu ----------
   function renderTabs() {
@@ -459,6 +599,10 @@
     const panel = $('.panel');
     panel.innerHTML = '';
     panel.onclick = null;
+    // Invités et Réponses ne modifient pas le site : pas d'aperçu
+    const noPreview = tab.id === 'invites' || tab.id === 'reponses';
+    $('.workspace').classList.toggle('no-preview', noPreview);
+    document.body.classList.toggle('no-preview', noPreview);
     if (tab.id === 'invites') return renderInvites(panel);
     if (tab.id === 'reponses') return renderReponses(panel);
 
@@ -477,6 +621,8 @@
       g.fields.forEach(def => $('.fields', box).append(field(def)));
       panel.append(box);
     });
+    sendPreview(); // l'aperçu rejoint la section en cours d'édition
+    requestAnimationFrame(fitDevice);
   }
 
   function inviteLink(slug) {
@@ -560,26 +706,35 @@
 
   async function renderReponses(panel) {
     panel.innerHTML = '<p class="muted">Chargement…</p>';
-    let rsvps;
-    try { rsvps = await S.listRsvps(); }
+    let rsvps, invites = [];
+    try { [rsvps, invites] = await Promise.all([S.listRsvps(), S.listInvites().catch(() => [])]); }
     catch (e) { panel.innerHTML = `<p class="error">${esc(e.message)}</p>`; return; }
     const yes = rsvps.filter(r => r.present), no = rsvps.filter(r => !r.present);
     const guests = yes.reduce((n, r) => n + (r.nb_personnes || 0), 0);
     const kids = yes.reduce((n, r) => n + (r.enfants || 0), 0);
     const regimes = yes.filter(r => r.regime);
+    const answeredInvites = new Set(rsvps.map(r => r.invite_id).filter(Boolean));
+    const waiting = invites.filter(i => !answeredInvites.has(i.id)).length;
     const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     // Réponses aux questions personnalisées : [{ question, reponse }], seules les réponses remplies
     const answers = r => (Array.isArray(r.reponses) ? r.reponses : []).filter(a => a && a.question && String(a.reponse ?? '').trim());
     // Une colonne d'export par question (intitulés tels qu'ils étaient au moment de la réponse)
     const questionCols = [...new Set(rsvps.flatMap(r => answers(r).map(a => a.question)))];
+    // Synthèse des moments (nombre de personnes attendues à chaque moment)
+    const moments = {};
+    yes.forEach(r => (r.moments || []).forEach(m => { moments[m] = (moments[m] || 0) + (r.nb_personnes || 0); }));
 
     panel.innerHTML = `
       <div class="stats">
         <div class="stat"><b>${rsvps.length}</b><span>Réponses</span></div>
-        <div class="stat gold"><b>${guests}</b><span>Personnes présentes</span></div>
+        <div class="stat gold"><b>${guests}</b><span>Couverts (présents)</span></div>
+        <div class="stat"><b>${yes.length}</b><span>Oui</span></div>
+        <div class="stat"><b>${no.length}</b><span>Non</span></div>
+        <div class="stat"><b>${waiting}</b><span>En attente</span></div>
         <div class="stat"><b>${kids}</b><span>Dont enfants</span></div>
-        <div class="stat"><b>${no.length}</b><span>Absents</span></div>
       </div>
+      ${Object.keys(moments).length ? `<section class="group"><h2>Par moment</h2>
+        ${Object.entries(moments).map(([m, n]) => `<p style="margin:0 0 6px">${esc(m)} — <b style="font-weight:500">${n}</b> personne${n > 1 ? 's' : ''}</p>`).join('')}</section>` : ''}
       ${regimes.length ? `<section class="group"><h2>Régimes et allergies</h2>
         ${regimes.map(r => `<p style="margin:0 0 6px"><b style="font-weight:500">${esc(r.nom)}</b> — ${esc(r.regime)}</p>`).join('')}</section>` : ''}
       <div class="toolbar"><span class="muted">${rsvps.length} réponse${rsvps.length > 1 ? 's' : ''}</span>
@@ -626,23 +781,52 @@
     scrollTo({ top: 0 });
   });
 
+  // Enregistrer : envoi des photos en attente, remplacement de leurs adresses, puis publication
   async function save() {
     const btn = $('.save');
-    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    btn.disabled = true; $('.cancel').disabled = true;
     try {
-      pruneNb();
+      const used = usedStrings(content);
+      const toSend = [...pending.keys()].filter(u => used.has(u));
+      for (let k = 0; k < toSend.length; k++) {
+        btn.textContent = `Envoi des photos ${k + 1}/${toSend.length}…`;
+        const blobUrl = toSend[k];
+        const url = await S.uploadPhoto(await compress(pending.get(blobUrl)));
+        replaceUrl(content, blobUrl, url);
+      }
+      btn.textContent = 'Enregistrement…';
+      pruneSettings();
       await S.saveContent(content);
-      dirty = false;
+      pending.forEach((_, u) => URL.revokeObjectURL(u));
+      pending.clear();
+      published = clone(content);
+      MBTheme.remember(content.apparence);
+      setDirty(false);
       $('.save-state').textContent = 'Enregistré ✓';
-      $('.save-state').classList.remove('dirty');
-      toast('Modifications enregistrées');
+      toast('Modifications publiées');
+      renderTabs(); renderPanel();
     } catch (e) {
-      btn.disabled = false;
+      btn.disabled = false; $('.cancel').disabled = false;
       toast(e.message || 'Enregistrement impossible', true);
     }
     btn.textContent = 'Enregistrer';
   }
   $('.save').addEventListener('click', save);
+
+  // Annuler : retour à la version publiée (les photos en attente sont oubliées)
+  $('.cancel').addEventListener('click', () => {
+    if (!confirm('Annuler toutes les modifications non enregistrées ?')) return;
+    content = clone(published);
+    pending.forEach((_, u) => URL.revokeObjectURL(u));
+    pending.clear();
+    document.body.classList.toggle('photos-nb', !!content.photos?.noirEtBlanc);
+    applyAppearance();
+    setDirty(false);
+    renderTabs(); renderPanel();
+    sendPreview();
+    toast('Modifications annulées');
+  });
+
   document.addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (dirty) save(); }
   });
@@ -653,15 +837,24 @@
     await S.logout(); location.reload();
   });
 
+  // Commutateur clair / sombre de l'admin (mémorisé pour l'admin uniquement)
+  MBTheme.bindSwitch($('.side .mode-switch'), { scope: 'admin' });
+
   // ---------- Démarrage ----------
   async function start() {
     content = await S.loadContent();
+    content.apparence = MBTheme.normalize(content.apparence);
+    published = clone(content);
+    MBTheme.remember(content.apparence);
     document.body.classList.toggle('photos-nb', !!content.photos?.noirEtBlanc);
     $('.login').hidden = true;
     $('.app').hidden = false;
     $('.demo-banner').hidden = S.live;
     $('.logout').hidden = !S.live;
+    $('.workspace').dataset.view = 'edit';
+    applyAppearance(false);
     renderTabs(); renderPanel();
+    measureBar(); fitDevice();
   }
 
   (async () => {

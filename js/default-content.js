@@ -90,9 +90,16 @@ window.MARIAGE_DEFAULT = {
     photo: 'assets/demo/footer.jpg',
     message: 'Merci de faire partie de notre histoire',
   },
+  // Apparence du site : thème (themes/index.js), mode par défaut et commutateur clair / sombre pour les invités
+  apparence: {
+    theme: 'noir-or',
+    modeParDefaut: 'dark',     // 'dark' | 'light' | 'auto' (selon l'appareil du visiteur)
+    afficherCommutateur: true,
+  },
   // Apparence des photos : le noir et blanc n'est qu'un affichage, les fichiers d'origine restent en couleur
   photos: {
     noirEtBlanc: false, // toutes les photos
     nb: [],             // ou photo par photo (adresses des photos à passer en noir et blanc)
+    focus: {},          // point focal par photo : { adresse: '50% 30%' } (cadrage sur mobile)
   },
 };

@@ -98,6 +98,7 @@ section { position: relative; padding: clamp(80px, 12vw, 150px) var(--gutter); }
 .ivory .title { text-align: center; }
 .ivory .label { display: block; text-align: center; }
 [data-section].is-off { display: none; }
+[data-rsvp-link][hidden] { display: none !important; } /* formulaire désactivé : les liens RSVP disparaissent */
 
 /* ---------- En-tête & menu ---------- */
 /* L'en-tête a trois états de couleurs :

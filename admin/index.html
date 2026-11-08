@@ -4,13 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
 <title>Espace mariés</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/tokens.css?v=20261108b">
-<link rel="stylesheet" href="../themes/noir-or.css?v=20261108b">
-<link rel="stylesheet" href="admin.css?v=20261108b">
+<!-- Le back-office prend le thème choisi par le couple : mêmes tokens et mêmes fichiers de thème que le site -->
+<link rel="stylesheet" href="../css/tokens.css?v=20261108c">
+<link rel="stylesheet" href="../themes/noir-or.css?v=20261108c">
+<link rel="stylesheet" href="../themes/bordeaux.css?v=20261108c">
+<link rel="stylesheet" href="../themes/emeraude.css?v=20261108c">
+<link rel="stylesheet" href="../themes/nuit-bleue.css?v=20261108c">
+<link rel="stylesheet" href="../themes/ivoire.css?v=20261108c">
+<link rel="stylesheet" href="admin.css?v=20261108c">
+<script>
+  // Anti-flash : thème du couple (dernière apparence vue) + mode choisi dans l'admin, avant le premier rendu
+  (function () {
+    var d = document.documentElement, a = null, m = null;
+    try { a = JSON.parse(localStorage.getItem('mb.apparence')); m = localStorage.getItem('mb.mode.admin'); } catch (e) {}
+    if (a && /^[a-z-]+$/.test(a.theme || '')) d.setAttribute('data-theme', a.theme);
+    if (m !== 'dark' && m !== 'light' && a) m = a.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : a.modeParDefaut;
+    if (m === 'dark' || m === 'light') d.setAttribute('data-mode', m);
+  })();
+</script>
 </head>
 <body>
 
@@ -30,7 +46,15 @@
 <div class="app" hidden>
   <aside class="side">
     <div class="brand">
-      <span class="brand-mono"></span>
+      <div class="brand-row">
+        <span class="brand-mono"></span>
+        <!-- Commutateur clair / sombre du back-office -->
+        <button class="mode-switch" type="button" role="switch" aria-checked="true" aria-label="Mode sombre">
+          <svg class="sw-sun" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="2.2"/><path d="M6 .6v1.6M6 9.8v1.6M.6 6h1.6M9.8 6h1.6M2.2 2.2l1.1 1.1M8.7 8.7l1.1 1.1M2.2 9.8l1.1-1.1M8.7 3.3l1.1-1.1"/></svg>
+          <svg class="sw-moon" viewBox="0 0 12 12" aria-hidden="true"><path d="M9.6 7.6A4.2 4.2 0 0 1 4.4 2.4a4.2 4.2 0 1 0 5.2 5.2Z"/></svg>
+          <span class="sw-knob"></span>
+        </button>
+      </div>
       <span class="brand-sub">Espace mariés</span>
     </div>
     <nav class="tabs"></nav>
@@ -48,11 +72,41 @@
       </div>
       <div class="bar-actions">
         <span class="save-state"></span>
+        <button class="btn btn-ghost btn-sm cancel" type="button" disabled>Annuler les modifications</button>
         <button class="btn btn-gold save" type="button" disabled>Enregistrer</button>
       </div>
     </header>
+
+    <!-- Téléphone : on passe de l'éditeur à l'aperçu -->
+    <div class="view-switch" role="tablist" aria-label="Affichage">
+      <button type="button" role="tab" aria-selected="true" data-view="edit">Modifier</button>
+      <button type="button" role="tab" aria-selected="false" data-view="preview">Aperçu</button>
+    </div>
+
     <p class="demo-banner" hidden>Mode démo : les modifications sont enregistrées dans ce navigateur uniquement. Configurez Supabase dans <code>js/config.js</code> pour la mise en ligne.</p>
-    <div class="panel"></div>
+
+    <div class="workspace">
+      <div class="panel"></div>
+
+      <!-- Aperçu en direct : le vrai site, alimenté par le brouillon (rien n'est publié avant « Enregistrer ») -->
+      <aside class="preview" aria-label="Aperçu du site">
+        <div class="preview-bar">
+          <div class="seg" role="group" aria-label="Taille d'écran">
+            <button type="button" data-device="mobile" aria-pressed="true" title="Téléphone (375 px)">Mobile</button>
+            <button type="button" data-device="tablet" aria-pressed="false" title="Tablette (768 px)">Tablette</button>
+            <button type="button" data-device="desktop" aria-pressed="false" title="Ordinateur (1280 px)">Bureau</button>
+          </div>
+          <div class="seg" role="group" aria-label="Mode de l'aperçu">
+            <button type="button" data-preview-mode="dark" aria-pressed="true">Sombre</button>
+            <button type="button" data-preview-mode="light" aria-pressed="false">Clair</button>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <div class="preview-device"><iframe title="Aperçu du site" src="../index.html?apercu=1" loading="eager"></iframe></div>
+        </div>
+        <p class="preview-note">Aperçu des modifications non enregistrées</p>
+      </aside>
+    </div>
   </main>
 </div>
 
@@ -60,9 +114,11 @@
 <input type="file" class="file-picker" accept="image/*" hidden>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="../js/config.js?v=20261108b"></script>
-<script src="../js/default-content.js?v=20261108b"></script>
-<script src="../js/store.js?v=20261108b"></script>
-<script src="admin.js?v=20261108b"></script>
+<script src="../themes/index.js?v=20261108c"></script>
+<script src="../js/theme.js?v=20261108c"></script>
+<script src="../js/config.js?v=20261108c"></script>
+<script src="../js/default-content.js?v=20261108c"></script>
+<script src="../js/store.js?v=20261108c"></script>
+<script src="admin.js?v=20261108c"></script>
 </body>
 </html>
