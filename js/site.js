@@ -514,13 +514,17 @@
     // l'onglet change ; un simple réglage met l'aperçu à jour sans bouger la position.
     const SECTIONS = { accueil: '#accueil', histoire: '#histoire', grandJour: '[data-section="grandJour"]', programme: '#programme',
       lieux: '#lieux', dressCode: '#dresscode', galerie: '#galerie', rsvp: '#rsvp', footer: '.footer' };
-    let lastSection = null;
+    let lastSection = null, lastTheme = null;
     addEventListener('message', e => {
       if (e.origin !== location.origin || e.data?.type !== 'mb:apercu') return;
       const tabChanged = !!e.data.section && e.data.section !== lastSection;
       const anchor = tabChanged ? null : captureAnchor();   // position à conserver (avant la mise à jour)
       render(e.data.content);   // thème + mode par défaut du couple appliqués par render()
       document.body.classList.remove('is-loading');
+      // Thème changé dans l'admin : on rejoue l'ouverture pour montrer sa couleur (pas au premier affichage)
+      const theme = document.documentElement.dataset.theme;
+      if (lastTheme && theme !== lastTheme) window.MBIntro?.jouer();
+      lastTheme = theme;
       if (tabChanged) {
         lastSection = e.data.section;
         const target = SECTIONS[e.data.section] && $(SECTIONS[e.data.section]);
@@ -536,6 +540,9 @@
   catch (e) { console.error(e); content = window.MARIAGE_DEFAULT; }
   invite = await MariageStore.getInvite(new URLSearchParams(location.search).get('invite')).catch(() => null);
   render(content);
+  // Thème appliqué : l'ouverture qui attendait (1re visite) peut partir, dans la bonne couleur
+  document.documentElement.classList.remove('theme-pending');
+  document.dispatchEvent(new Event('mb:theme-pret'));
 
   document.body.classList.remove('is-loading');
   // Le contenu est injecté après le chargement : on rejoint l'ancre une fois la page construite,

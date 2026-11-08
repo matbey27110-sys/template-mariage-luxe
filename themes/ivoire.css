@@ -4,6 +4,11 @@
    Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="ivoire"] {
+  /* Animation d'ouverture : voile translucide (même effet de verre pour tous les thèmes), texte et monogramme */
+  --intro-bg: rgba(244, 237, 226, .62);
+  --intro-ink: #000000;
+  --intro-accent: #7F6739;
+
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
   --photo-muted: #B3A493;

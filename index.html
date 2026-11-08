@@ -17,13 +17,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:," data-favicon>
 <!-- Thèmes : un fichier par thème (variables seulement, très léger). Le thème actif est choisi par data-theme. -->
-<link rel="stylesheet" href="css/tokens.css?v=20261108m">
-<link rel="stylesheet" href="themes/noir-or.css?v=20261108m">
-<link rel="stylesheet" href="themes/bordeaux.css?v=20261108m">
-<link rel="stylesheet" href="themes/emeraude.css?v=20261108m">
-<link rel="stylesheet" href="themes/nuit-bleue.css?v=20261108m">
-<link rel="stylesheet" href="themes/ivoire.css?v=20261108m">
-<link rel="stylesheet" href="css/site.css?v=20261108m">
+<link rel="stylesheet" href="css/tokens.css?v=20261108n">
+<link rel="stylesheet" href="themes/noir-or.css?v=20261108n">
+<link rel="stylesheet" href="themes/bordeaux.css?v=20261108n">
+<link rel="stylesheet" href="themes/emeraude.css?v=20261108n">
+<link rel="stylesheet" href="themes/nuit-bleue.css?v=20261108n">
+<link rel="stylesheet" href="themes/ivoire.css?v=20261108n">
+<link rel="stylesheet" href="css/site.css?v=20261108n">
 <script>
   // Anti-flash : applique le thème et le mode avant le premier rendu (dernière apparence vue).
   // Les valeurs définitives arrivent ensuite de Supabase (js/site.js → js/theme.js).
@@ -31,7 +31,7 @@
     var d = document.documentElement, a = null, m = null;
     if (/[?&]apercu=1/.test(location.search)) { d.classList.add('is-preview'); return; }
     try { a = JSON.parse(localStorage.getItem('mb.apparence')); } catch (e) {}
-    if (!a) return;
+    if (!a) { d.classList.add('theme-pending'); return; } // 1re visite : thème inconnu tant que Supabase n'a pas répondu
     if (/^[a-z-]+$/.test(a.theme || '')) d.setAttribute('data-theme', a.theme);
     m = a.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : a.modeParDefaut;
     if (m === 'dark' || m === 'light') d.setAttribute('data-mode', m);
@@ -195,36 +195,53 @@
 <script>
 (function () {
   var el = document.getElementById('intro');
-  if (!el || document.documentElement.classList.contains('is-preview')) return; // pas d'intro dans l'aperçu de l'admin
+  if (!el) return;
+  var root = document.documentElement;
   var DUREE = 3200;            // temps avant que le voile se lève (ms)
   var UNE_FOIS = true;         // true = une seule fois par visite ; false = à chaque chargement
-
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var timer = null, ferme = true;
+  function fermer() {
+    if (ferme) return; ferme = true;
+    clearTimeout(timer);
+    el.classList.add('done');
+    document.body.classList.remove('intro-on');
+    setTimeout(function () { if (ferme) el.hidden = true; }, 1150);
+  }
+  // Joue l'ouverture (repartie de zéro : animations relancées par le passage display none → grid)
+  function jouer() {
+    if (reduce) return;
+    clearTimeout(timer);
+    el.hidden = true; el.classList.remove('done'); void el.offsetWidth;
+    el.hidden = false; ferme = false;
+    document.body.classList.add('intro-on');
+    timer = setTimeout(fermer, DUREE);
+  }
+  el.addEventListener('click', fermer);   // un clic passe l'ouverture
+  window.MBIntro = { jouer: jouer };      // aperçu de l'admin : rejouée quand le thème change (js/site.js)
+
+  if (root.classList.contains('is-preview')) return; // pas d'ouverture automatique dans l'aperçu
   var dejaVu = false;
   try { dejaVu = sessionStorage.getItem('intro-vue') === '1'; } catch (e) {}
   if (reduce || (UNE_FOIS && dejaVu)) return;
   try { sessionStorage.setItem('intro-vue', '1'); } catch (e) {}
 
-  el.hidden = false;
-  document.body.classList.add('intro-on');
-
-  var ferme = false;
-  function fermer() {
-    if (ferme) return; ferme = true;
-    el.classList.add('done');
-    document.body.classList.remove('intro-on');
-    setTimeout(function () { el.hidden = true; }, 1150);
-  }
-  el.addEventListener('click', fermer);   // un clic passe l'ouverture
-  setTimeout(fermer, DUREE);
+  // Couleur du voile = celle du thème dès la première image : à la toute première visite (thème pas encore
+  // connu), on attend que js/site.js l'ait appliqué (au plus 2,5 s) avant de lever le rideau.
+  if (!root.classList.contains('theme-pending')) return jouer();
+  var parti = false;
+  function partir() { if (parti) return; parti = true; jouer(); }
+  document.addEventListener('mb:theme-pret', partir, { once: true });
+  setTimeout(partir, 2500);
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="themes/index.js?v=20261108m"></script>
-<script src="js/theme.js?v=20261108m"></script>
-<script src="js/config.js?v=20261108m"></script>
-<script src="js/default-content.js?v=20261108m"></script>
-<script src="js/store.js?v=20261108m"></script>
-<script src="js/site.js?v=20261108m"></script>
+<script src="themes/index.js?v=20261108n"></script>
+<script src="js/theme.js?v=20261108n"></script>
+<script src="js/config.js?v=20261108n"></script>
+<script src="js/default-content.js?v=20261108n"></script>
+<script src="js/store.js?v=20261108n"></script>
+<script src="js/site.js?v=20261108n"></script>
 </body>
 </html>

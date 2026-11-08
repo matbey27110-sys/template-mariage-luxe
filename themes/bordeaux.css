@@ -4,6 +4,11 @@
    Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="bordeaux"] {
+  /* Animation d'ouverture : voile translucide (même effet de verre pour tous les thèmes), texte et monogramme */
+  --intro-bg: rgba(58, 10, 14, .62);
+  --intro-ink: #F4EDE2;
+  --intro-accent: #C8A86B;
+
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
   --photo-muted: #A38D7B;

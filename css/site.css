@@ -502,16 +502,17 @@ html.is-preview .reveal.rv-img img { transform: none; }
    Animation d'ouverture (intro-mariage)
    ========================================================= */
 .intro {
-  --intro-bg: rgba(0, 0, 0, .62); /* voile noir pur translucide (effet verre) */
+  /* Couleurs du voile, du texte et du monogramme : --intro-bg / --intro-ink / --intro-accent du thème (themes/*.css) */
   --intro-blur: 22px;             /* intensité du flou derrière le voile */
   position: fixed; inset: 0; z-index: 9999;
   display: grid; place-items: center;
-  background: var(--intro-bg); color: var(--photo-ink);
+  background: var(--intro-bg); color: var(--intro-ink);
   -webkit-backdrop-filter: blur(var(--intro-blur)) saturate(1.2);
   backdrop-filter: blur(var(--intro-blur)) saturate(1.2);
   border-bottom: 1px solid var(--photo-line); /* liseré de verre visible quand le voile se lève */
   transition: transform 1.1s cubic-bezier(.76, 0, .24, 1), visibility 1.1s;
-  --c-accent: var(--photo-accent);
+  --c-ink: var(--intro-ink);
+  --c-accent: var(--intro-accent);
 }
 /* le voile se lève vers le haut */
 .intro.done { transform: translateY(-100%); visibility: hidden; }

@@ -4,6 +4,11 @@
    Couleurs uniquement : polices et formes sont communes à tous les thèmes (css/tokens.css).
    ============================================================ */
 [data-theme="nuit-bleue"] {
+  /* Animation d'ouverture : voile translucide (même effet de verre pour tous les thèmes), texte et monogramme */
+  --intro-bg: rgba(11, 18, 32, .62);
+  --intro-ink: #F1EEE8;
+  --intro-accent: #E6CF9C;
+
   --photo-ink: #F1EEE8;
   --photo-ink-soft: #DCE0E8;
   --photo-muted: #98A0B3;

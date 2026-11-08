@@ -7,6 +7,11 @@
 
 /* ---------- Commun aux deux modes ---------- */
 [data-theme="noir-or"] {
+  /* Animation d'ouverture : voile translucide (même effet de verre pour tous les thèmes), texte et monogramme */
+  --intro-bg: rgba(0, 0, 0, .62);
+  --intro-ink: #F4EDE2;
+  --intro-accent: #C8A86B;
+
   /* Photos plein écran : voile noir, textes ivoire et or (identiques dans les deux modes) */
   --photo-ink: #F4EDE2;
   --photo-ink-soft: #E9E0D2;
