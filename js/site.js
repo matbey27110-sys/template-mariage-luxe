@@ -72,22 +72,53 @@
   const easeInOutCubic = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   let scrollAnim = null;
   const stopScroll = () => { if (scrollAnim) cancelAnimationFrame(scrollAnim); scrollAnim = null; };
-  ['wheel', 'touchstart', 'keydown'].forEach(ev => addEventListener(ev, stopScroll, { passive: true }));
+
+  // Position d'arrivée : haut de la cible moins son scroll-margin-top (CSS), bornée à la page
+  const targetY = target => {
+    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+    return Math.max(0, Math.min(target.getBoundingClientRect().top + scrollY - margin, document.documentElement.scrollHeight - innerHeight));
+  };
+
+  // Les photos en chargement différé (galerie, trio) n'ont pas de hauteur tant qu'elles ne sont pas chargées :
+  // en se chargeant pendant le trajet, elles poussaient le formulaire plus bas et on s'arrêtait dans la galerie.
+  // 1) on charge tout de suite celles qui sont avant la cible ;
+  const loadImagesBefore = target => $$('img[loading="lazy"]').forEach(img => {
+    if (img.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING) img.loading = 'eager';
+  });
+  // 2) une fois arrivé, on reste calé sur la cible tant que la page change de hauteur (quelques secondes au plus),
+  //    sauf si le visiteur fait défiler lui-même.
+  let holdObs = null, holdTimer = null;
+  const stopHold = () => { holdObs?.disconnect(); holdObs = null; clearTimeout(holdTimer); };
+  function holdOn(target, ms = 4000) {
+    stopHold();
+    holdObs = new ResizeObserver(() => { if (!scrollAnim) scrollTo(0, targetY(target)); });
+    holdObs.observe($('main'));
+    holdTimer = setTimeout(stopHold, ms);
+  }
+  ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(ev => addEventListener(ev, () => { stopScroll(); stopHold(); }, { passive: true }));
 
   function smoothScrollTo(target, maxDuration = 2200) {
-    stopScroll();
+    stopScroll(); stopHold();
+    loadImagesBefore(target);
     const from = scrollY;
-    const to = Math.min(target.getBoundingClientRect().top + from, document.documentElement.scrollHeight - innerHeight);
-    const dist = to - from;
-    if (Math.abs(dist) < 2) return;
+    const dist = targetY(target) - from;
+    if (Math.abs(dist) < 2) return holdOn(target);
     const duration = Math.min(maxDuration, 900 + Math.abs(dist) * .25); // 0,9 s à 2,2 s
     const start = performance.now();
     const step = now => {
       const t = Math.min(1, (now - start) / duration);
-      scrollTo(0, from + dist * easeInOutCubic(t));
+      scrollTo(0, from + (targetY(target) - from) * easeInOutCubic(t)); // cible relue à chaque image : suit les décalages
       scrollAnim = t < 1 ? requestAnimationFrame(step) : null;
+      if (t >= 1) holdOn(target);
     };
     scrollAnim = requestAnimationFrame(step);
+  }
+  // Sans animation (mouvements réduits, lien direct) : saut immédiat puis maintien sur la cible
+  function jumpTo(target, ms) {
+    stopScroll();
+    loadImagesBefore(target);
+    scrollTo(0, targetY(target));
+    holdOn(target, ms);
   }
 
   document.addEventListener('click', e => {
@@ -98,7 +129,7 @@
     if (!target) return;
     e.preventDefault();
     if (!PREVIEW) history.pushState(null, '', `#${id}`);
-    if (reduce) target.scrollIntoView();
+    if (reduce) jumpTo(target);
     else requestAnimationFrame(() => smoothScrollTo(target)); // laisse le menu se fermer avant de partir
   });
 
@@ -468,7 +499,7 @@
       if (e.data.section && e.data.section !== lastSection) {
         lastSection = e.data.section;
         const target = SECTIONS[e.data.section] && $(SECTIONS[e.data.section]);
-        if (target) requestAnimationFrame(() => (reduce ? target.scrollIntoView() : smoothScrollTo(target, 900)));
+        if (target) requestAnimationFrame(() => (reduce ? jumpTo(target) : smoothScrollTo(target, 900)));
       }
     });
     parent.postMessage({ type: 'mb:apercu-pret' }, location.origin === 'null' ? '*' : location.origin); // fichier local : pas d'origine
@@ -482,8 +513,9 @@
   render(content);
 
   document.body.classList.remove('is-loading');
-  // Le contenu est injecté après le chargement : on rejoint l'ancre une fois la page construite
-  const anchor = location.hash && document.getElementById(location.hash.slice(1));
-  if (anchor) anchor.scrollIntoView({ behavior: 'instant' });
+  // Le contenu est injecté après le chargement : on rejoint l'ancre une fois la page construite,
+  // puis on y reste pendant que les photos finissent de charger (l'intro animée passe par-dessus sans gêner)
+  const anchor = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  if (anchor) jumpTo(anchor, 8000);
   onScroll();
 })();

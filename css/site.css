@@ -330,6 +330,9 @@ body:has(.menu.open) .topbar::before { opacity: 0; }
 
 /* ---------- RSVP ---------- */
 .rsvp { background: radial-gradient(ellipse at 50% 0%, var(--signature-glow), transparent 60%), var(--c-bg); }
+/* Arrivée sur #rsvp : l'en-tête fixe grandit de la barre d'état sur iPhone ; on décale d'autant
+   pour que le titre reste sous l'en-tête (la marge haute de la section fait le reste). Lu aussi par js/site.js. */
+#rsvp { scroll-margin-top: env(safe-area-inset-top, 0px); }
 .rsvp .title { margin-bottom: 18px; }
 /* Carte du formulaire : surface posée au-dessus du fond, comme une invitation sur la table */
 .rsvp-body {
