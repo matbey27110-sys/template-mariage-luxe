@@ -97,6 +97,24 @@
   }
   ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(ev => addEventListener(ev, () => { stopScroll(); stopHold(); }, { passive: true }));
 
+  // Aperçu de l'admin : un réglage modifié ne doit pas faire bouger la vue. On repère la section visible
+  // en haut de l'écran et son décalage avant la mise à jour, puis on la garde au même endroit pendant que
+  // la page se recompose (section masquée / affichée, photos qui se rechargent). Safari ne le fait pas seul.
+  function captureAnchor() {
+    const el = $$('main > section, main > .marquee, .footer')
+      .find(s => s.offsetHeight > 0 && s.getBoundingClientRect().bottom > 0);
+    return el && { el, top: el.getBoundingClientRect().top };
+  }
+  function keepAnchor(a, ms = 1500) {
+    stopHold();
+    if (!a) return;
+    const fix = () => { if (a.el.offsetHeight > 0) scrollTo(0, scrollY + a.el.getBoundingClientRect().top - a.top); };
+    fix();
+    holdObs = new ResizeObserver(() => { if (!scrollAnim) fix(); });
+    holdObs.observe($('main'));
+    holdTimer = setTimeout(stopHold, ms);
+  }
+
   function smoothScrollTo(target, maxDuration = 2200) {
     stopScroll(); stopHold();
     loadImagesBefore(target);
@@ -321,8 +339,12 @@
     $('.swatches').classList.remove('reveal'); // ce sont les pastilles qui apparaissent une à une
 
     // ---------- Galerie ----------
-    $('.gallery').innerHTML = (C.galerie.photos || []).map(src =>
+    // Reconstruite seulement si elle a changé : sinon, dans l'aperçu, chaque frappe rechargeait les photos
+    // (hauteur nulle le temps du chargement) et tout ce qui est en dessous sautait.
+    const galleryHtml = (C.galerie.photos || []).map(src =>
       `<button type="button" class="reveal"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"${nbPhotos.has(src) ? ' class="nb"' : ''}${focus[src] ? ` style="--focus:${esc(focus[src])}"` : ''}></button>`).join('');
+    const gallery = $('.gallery');
+    if (gallery.dataset.html !== galleryHtml) { gallery.dataset.html = galleryHtml; gallery.innerHTML = galleryHtml; }
 
     renderCountdown(y);
     renderRsvp();
@@ -488,19 +510,22 @@
   // Démarrage
   // =====================================================================
   if (PREVIEW) {
-    // Aperçu : l'admin (même origine) envoie son brouillon ; la section en cours d'édition est amenée à l'écran
+    // Aperçu : l'admin (même origine) envoie son brouillon. La vue ne défile vers une section que quand
+    // l'onglet change ; un simple réglage met l'aperçu à jour sans bouger la position.
     const SECTIONS = { accueil: '#accueil', histoire: '#histoire', grandJour: '[data-section="grandJour"]', programme: '#programme',
       lieux: '#lieux', dressCode: '#dresscode', galerie: '#galerie', rsvp: '#rsvp', footer: '.footer' };
     let lastSection = null;
     addEventListener('message', e => {
       if (e.origin !== location.origin || e.data?.type !== 'mb:apercu') return;
+      const tabChanged = !!e.data.section && e.data.section !== lastSection;
+      const anchor = tabChanged ? null : captureAnchor();   // position à conserver (avant la mise à jour)
       render(e.data.content);   // thème + mode par défaut du couple appliqués par render()
       document.body.classList.remove('is-loading');
-      if (e.data.section && e.data.section !== lastSection) {
+      if (tabChanged) {
         lastSection = e.data.section;
         const target = SECTIONS[e.data.section] && $(SECTIONS[e.data.section]);
         if (target) requestAnimationFrame(() => (reduce ? jumpTo(target) : smoothScrollTo(target, 900)));
-      }
+      } else if (!scrollAnim) keepAnchor(anchor);           // un défilement d'onglet en cours continue normalement
     });
     parent.postMessage({ type: 'mb:apercu-pret' }, location.origin === 'null' ? '*' : location.origin); // fichier local : pas d'origine
     return;
