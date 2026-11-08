@@ -627,7 +627,8 @@
 
   function inviteLink(slug) {
     const base = location.href.replace(/admin\/.*$/, '');
-    return `${base}?invite=${encodeURIComponent(slug)}`;
+    const m = S.current.slug && !S.current.legacy ? `m=${encodeURIComponent(S.current.slug)}&` : ''; // site de ce mariage
+    return `${base}?${m}invite=${encodeURIComponent(slug)}`;
   }
 
   async function renderInvites(panel) {
@@ -842,8 +843,11 @@
 
   // ---------- Démarrage ----------
   async function start() {
-    content = await S.loadContent();
+    content = await S.loadContent({ admin: true }); // le mariage dont ce compte est propriétaire
     content.apparence = MBTheme.normalize(content.apparence);
+    // « Voir le site » et l'aperçu ouvrent bien le site de CE mariage
+    const q = S.current.slug && !S.current.legacy ? `?m=${encodeURIComponent(S.current.slug)}` : '';
+    $('.side-foot a.link').href = `../${q}`;
     published = clone(content);
     MBTheme.remember(content.apparence);
     document.body.classList.toggle('photos-nb', !!content.photos?.noirEtBlanc);

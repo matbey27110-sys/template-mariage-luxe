@@ -1,21 +1,24 @@
-# Template mariage luxe — V1
+# Template mariage luxe
 
-Site de mariage « Noir & or » + espace mariés (`/admin`) pour modifier textes, photos et suivre les RSVP.
+Site de mariage haut de gamme + espace mariés (`/admin`) avec **thèmes**, **mode clair / sombre** et **aperçu en direct** avant publication.
+Un seul code et un seul projet Supabase pour **tous les couples** (une ligne par mariage).
 
 ## Structure
 
 ```
-index.html            Site public
-css/site.css          Style du site (couleurs dans :root)
-js/default-content.js Contenu de démo = structure complète du contenu + bibliothèque de fonds
-js/store.js           Accès aux données (Supabase ou mode démo)
-js/site.js            Affichage, compte à rebours, RSVP, calendrier
-js/config.js          ← Connexion Supabase du client
-admin/                Espace mariés
-supabase/schema.sql   Base de données à installer une fois par client
-assets/fonds/         Fonds d'en-tête proposés aux clients
-assets/demo/          Photos de démonstration (Unsplash)
-serve.py              Prévisualisation locale
+index.html              Site public (+ script anti-flash du thème dans le <head>)
+css/tokens.css          Contrat des design tokens (échelle typo, contextes nuit / jour / photo)
+css/site.css            Composants du site — n'utilise que des variables
+themes/<id>.css         Un fichier par thème : couleurs (sombre + clair), polices
+themes/index.js         Catalogue des thèmes (cartes de la page Apparence)
+js/theme.js             Thème + mode, commutateur clair / sombre, mémorisation
+js/default-content.js   Contenu par défaut = structure complète du contenu + bibliothèque de fonds
+js/store.js             Accès aux données (Supabase multi-couples ou mode démo)
+js/site.js              Rendu du site, compte à rebours, RSVP, calendrier, mode aperçu
+js/config.js            ← Connexion Supabase (+ mariage par défaut)
+admin/                  Espace mariés : éditeur + aperçu en direct
+supabase/schema.sql     Base de données (à lancer une fois, relançable sans risque)
+assets/                 Fonds d'en-tête, photos de démo, police Blasse
 ```
 
 ## Tester en local
@@ -24,42 +27,51 @@ serve.py              Prévisualisation locale
 python3 serve.py
 ```
 
-- Site : http://127.0.0.1:4180
+- Site : http://127.0.0.1:4180 (un mariage précis : `?m=<slug>`)
 - Admin : http://127.0.0.1:4180/admin/
 
-Sans Supabase configuré, tout fonctionne en **mode démo** : les modifications et réponses sont stockées dans le navigateur.
-Pour repartir de zéro : dans la console du navigateur, `localStorage.clear()`.
+Sans Supabase configuré, tout fonctionne en **mode démo** (données dans le navigateur ; `localStorage.clear()` pour repartir de zéro).
 
-## Mettre en ligne pour un nouveau client
+## Installer la base (une seule fois)
 
-1. **Dupliquer** le dossier `luxe` → `clients/prenom-prenom`.
-2. **Créer un projet Supabase** (gratuit) sur supabase.com.
-3. Dans Supabase → **SQL Editor** → coller tout `supabase/schema.sql` → **Run**.
-4. Supabase → **Authentication → Users → Add user** : email + mot de passe des mariés (cocher « Auto confirm »).
-5. Supabase → **Authentication → Sign In / Providers** : laisser le fournisseur **Email activé**, mais désactiver **« Allow new users to sign up »** dans la partie *User Signups* (personne d'autre ne peut créer de compte). Attention à ne pas couper le fournisseur Email lui-même, sinon les mariés ne peuvent plus se connecter.
-6. Supabase → **Project Settings → API** : copier `Project URL` et la clé `anon public` dans `js/config.js`.
-7. **Héberger** le dossier sur Netlify (glisser-déposer sur app.netlify.com/drop) ou Vercel, puis brancher le nom de domaine.
-8. Envoyer aux mariés : l'adresse du site + `/admin/`, leur email et leur mot de passe.
+1. Supabase → **SQL Editor** → coller tout `supabase/schema.sql` → **Run**.
+   - Si l'ancienne table `site` existe, son contenu devient automatiquement le premier mariage (slug fait des prénoms, ex. `alexandra-loic`), avec ses invités et ses réponses.
+2. Supabase → **Authentication → Sign In / Providers** : garder le fournisseur **Email** activé, mais désactiver **« Allow new users to sign up »**.
 
-Les mariés remplissent ensuite tout eux-mêmes : textes, photos, fond d'en-tête, invités, réglages du RSVP.
+## Ajouter un nouveau couple (≈ 5 minutes)
 
-## Ce que contient la V1
+1. Supabase → **Authentication → Users → Add user** : email + mot de passe des mariés (cocher « Auto confirm »).
+2. Supabase → **SQL Editor** :
+   ```sql
+   insert into public.mariages (slug, owner_id, content)
+   values ('prenom-prenom', (select id from auth.users where email = 'email@des-maries.fr'), '{}'::jsonb);
+   ```
+3. Leur adresse : `https://votre-site/?m=prenom-prenom` — ou un nom de domaine dédié pointé sur le même site, renseigné dans la colonne `domaine` de leur ligne.
+4. Envoyer aux mariés : l'adresse du site + `/admin/`, leur email et leur mot de passe. Ils remplissent tout eux-mêmes.
 
-- **Accueil** : prénoms, date, lieu, compte à rebours (heure facultative ; « C'est aujourd'hui ! » le jour J), fond au choix (bibliothèque ou photo perso) avec réglage d'assombrissement, bouton vers le RSVP.
-- **Notre histoire** : photo plein écran + titre, trio de photos encadrées, texte.
-- **Programme**, **Le grand jour** (photo plein écran), **Lieux** (bouton itinéraire Google Maps), **Dress code** (pastilles de couleurs), **Galerie** (visionneuse).
-- **RSVP** : présent / absent, nombre de personnes, enfants, prénoms des accompagnants, moments, régime, chanson, message ; date limite ; bouton RSVP flottant.
-- **Liens invités** : `site.fr/?invite=famille-martin-ab12` → nom pré-rempli, nombre de places limité. Import d'une liste en une fois.
-- **Réponses** : compteurs, régimes alimentaires, tableau, export CSV (Excel).
-- **Footer** : photo, monogramme sur verre dépoli, « Ajouter à mon calendrier » (.ics).
-- Chaque section peut être masquée depuis l'admin.
+Chaque couple ne voit que **son** contenu, **ses** invités, **ses** réponses et **ses** photos (règles RLS + un dossier de photos par mariage).
+
+## Fonctionnalités
+
+- **Thèmes** (page *Apparence*) : Noir & Or, Bordeaux, Émeraude, Nuit bleue, Ivoire — chacun en sombre et en clair, contrastes AA. Le back-office prend le thème du couple.
+- **Commutateur clair / sombre** dans l'en-tête du site et dans l'admin ; mode par défaut choisi par le couple ; commutateur masquable.
+- **Aperçu en direct** : le vrai site à droite de l'éditeur (mobile / tablette / bureau, sombre / clair), mis à jour à chaque frappe ; les photos ne sont envoyées qu'à l'enregistrement ; « Annuler les modifications » ; point focal des photos.
+- **Sections** : accueil + compte à rebours, notre histoire, programme, le grand jour, lieux, dress code, galerie, RSVP, footer — toutes masquables.
+- **RSVP** : présent / absent, nombre de personnes, enfants, accompagnants, moments, régime, chanson, questions personnalisées, message ; date limite ; liens invités (`?invite=…`).
+- **Tableau de bord** : couverts, oui / non / en attente, enfants, effectif par moment, régimes, export CSV (Excel).
+- **Photos en noir et blanc** : toutes, ou photo par photo.
 
 ## Sécurité
 
-- Le contenu est lisible par tous, modifiable seulement par les mariés connectés.
-- La liste des invités et les réponses ne sont visibles que dans l'admin.
-- Les réponses passent par la fonction `submit_rsvp` qui vérifie la date limite et le nombre de places côté serveur.
+- Le contenu publié est lisible par tous ; seul le compte propriétaire d'un mariage peut le modifier.
+- Invités et réponses ne sont visibles que par les mariés concernés.
+- Les réponses passent par la fonction `submit_rsvp` qui vérifie le mariage, la date limite et le nombre de places côté serveur.
+- Les photos sont rangées dans `photos/<id du mariage>/` ; un couple ne peut ajouter ou supprimer que dans son dossier.
 
-## Pistes V2
+## Pistes
 
-Email de notification à chaque réponse, mot de passe pour le site public, QR code du faire-part, dépôt de photos par les invités après le mariage, intro enveloppe animée, thèmes Bordeaux / Émeraude au choix.
+Email de notification à chaque réponse (fonction Supabase), mot de passe pour le site public, QR code du faire-part aux couleurs du thème, dépôt de photos par les invités, bilingue FR / EN.
+
+## Licence des polices
+
+Le thème Noir & Or utilise **Blasse** (licence « usage personnel ») : acheter une licence commerciale avant toute livraison à un client, ou remplacer la police dans `themes/noir-or.css`. Les autres thèmes utilisent des Google Fonts libres.
