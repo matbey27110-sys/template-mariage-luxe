@@ -125,7 +125,7 @@
       ] },
       { title: 'Photos', fields: [
         ['photos.noirEtBlanc', 'Afficher toutes les photos en noir et blanc', 'toggle',
-          'S’applique à toutes les photos du site, y compris celles que vous importez. Désactivé, chaque photo suit son propre réglage (bouton ◐ sur chaque photo). Vos fichiers restent en couleur.'],
+          'S’applique à toutes les photos du site, y compris celles que vous importez. Désactivé, chaque photo suit son propre réglage (commutateur « Image en noir et blanc » sous chaque photo). Vos fichiers restent en couleur.'],
       ] },
     ] },
     { sep: true },
@@ -246,16 +246,17 @@
   // une photo garde son réglage si on la déplace. Le fichier lui-même reste en couleur.
   const nbList = () => ((content.photos ??= {}).nb ??= []);
   const isNb = url => !!url && nbList().includes(url);
-  function nbButton(url, cls, label, i) {
+  // Commutateur « Image en noir et blanc » : même dessin que les autres interrupteurs (.toggle).
+  // <button role="switch"> : Espace / Entrée au clavier sont gérés nativement par le bouton.
+  function nbSwitch(url, i) {
     if (!url) return '';
-    const on = isNb(url);
-    return `<button type="button" class="${cls}" data-nb ${i != null ? `data-i="${i}"` : ''} aria-pressed="${on}" title="Afficher cette photo en noir et blanc">${label}</button>`;
+    return `<button type="button" class="toggle nb-switch" role="switch" data-nb ${i != null ? `data-i="${i}"` : ''} aria-checked="${isNb(url)}"><i></i><span>Image en noir et blanc</span></button>`;
   }
   function toggleNb(url, btn, img) {
     const list = nbList(), k = list.indexOf(url);
     if (k < 0) list.push(url); else list.splice(k, 1);
     const on = k < 0;
-    btn?.setAttribute('aria-pressed', on);
+    btn?.setAttribute('aria-checked', on);
     img?.classList.toggle('nb', on);
     markDirty();
   }
@@ -337,7 +338,7 @@
       case 'image': {
         el.innerHTML = `${head}<div class="img-field">${val ? focusPicker(val, '<img class="thumb" alt="">') : '<img class="thumb" alt="">'}<div class="img-actions">
           <button type="button" class="btn btn-ghost btn-sm" data-change>Changer la photo</button>
-          ${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Noir et blanc')}</div></div>
+          ${nbSwitch(val)}</div></div>
           ${val ? '<small>Cliquez sur la photo pour choisir le point à garder visible sur téléphone.</small>' : ''}${foot}`;
         const thumb = $('img', el);
         thumb.src = src(val) || ''; thumb.classList.toggle('nb', isNb(val));
@@ -354,11 +355,10 @@
         el.innerHTML = `${head}<div class="img-grid">${list.map((u, i) => `
           <div class="img-tile">${focusPicker(u, `<img alt="" src="${esc(src(u))}" class="${isNb(u) ? 'nb' : ''}">`)}
             <div class="tools">
-              ${nbButton(u, '', '◐', i)}
               ${fixed ? '' : `<button type="button" data-a="left" data-i="${i}" title="Déplacer avant">←</button>`}
               <button type="button" data-a="swap" data-i="${i}" title="Remplacer">↻</button>
               ${fixed ? '' : `<button type="button" data-a="del" data-i="${i}" title="Supprimer">✕</button>`}
-            </div></div>`).join('')}
+            </div><div class="tile-nb">${nbSwitch(u, i)}</div></div>`).join('')}
           ${!fixed || list.length < fixed ? `<button type="button" class="add-tile"><b>+</b>Ajouter</button>` : ''}
           </div>${list.length ? '<small>Cliquez sur une photo pour choisir le point à garder visible.</small>' : ''}${foot}`;
         revealIn(rootObj, path, $$('.img-tile', el), popIn);
@@ -393,7 +393,7 @@
           ${MARIAGE_FONDS.map(f => `<button type="button" class="img-tile bg-choice ${f.url === val ? 'selected' : ''}" data-url="${esc(f.url)}"><img alt="" src="${esc(src(f.url))}"><span>${esc(f.nom)}</span></button>`).join('')}
           ${!isLib && val ? `<button type="button" class="img-tile bg-choice selected" data-url="${esc(val)}"><img alt="" src="${esc(src(val))}"><span>Votre photo</span></button>` : ''}
           <button type="button" class="add-tile" data-upload><b>+</b>Votre photo</button>
-        </div>${val ? `<div>${nbButton(val, 'btn btn-ghost btn-sm nb-btn', '◐ Fond choisi en noir et blanc')}</div>` : ''}
+        </div>${val ? `<div>${nbSwitch(val)}</div>` : ''}
         <small>Choisissez un fond de la bibliothèque ou envoyez votre propre photo.</small>`;
         $$('.bg-choice', el).forEach(t => $('img', t).classList.toggle('nb', isNb(t.dataset.url)));
         el.addEventListener('click', async e => {

@@ -217,11 +217,19 @@ td .muted, .muted { color: var(--a-muted); font-size: 13px; }
 /* ---------- Photos en noir et blanc ---------- */
 /* Option globale : les vignettes de l'admin montrent le rendu du site */
 body.photos-nb .thumb, body.photos-nb .img-tile img { filter: grayscale(1); }
-/* Photo par photo (bouton ◐) */
+/* Photo par photo (commutateur « Image en noir et blanc ») */
 .thumb, .img-tile img { transition: filter .4s; }
 .thumb.nb, .img-tile img.nb { filter: grayscale(1); }
-.nb-btn[aria-pressed="true"] { background: var(--a-tint); border-color: var(--a-accent-soft); }
-.img-tile .tools button[data-nb][aria-pressed="true"] { background: var(--photo-ink); color: #000000; }
+/* Le commutateur est un <button role="switch"> : mêmes piste et pastille que .toggle, pilotées par aria-checked */
+.nb-switch { border: 0; background: none; padding: 0; text-align: left; }
+.nb-switch[aria-checked="true"] i { background: var(--a-accent); }
+.nb-switch[aria-checked="true"] i::after { transform: translateX(18px); background: var(--c-on-accent); }
+.nb-switch:focus-visible { outline: none; }
+.nb-switch:focus-visible i { outline: 1px solid var(--a-accent-soft); outline-offset: 2px; }
+/* Galerie : sous chaque vignette */
+.tile-nb { padding: 8px 8px 9px; border-top: 1px solid var(--a-line); }
+.img-tile:has(.tile-nb) .tools { inset: 6px 6px auto; }   /* outils en haut de la photo : la ligne du commutateur reste libre */
+.tile-nb .nb-switch { gap: 8px; font-size: 12px; line-height: 1.3; }
 
 /* ---------- Commutateur clair / sombre (même dessin que sur le site) ---------- */
 .mode-switch {
