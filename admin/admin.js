@@ -120,10 +120,8 @@
     { id: 'apparence', label: 'Apparence', hint: 'Thème du site, mode clair / sombre et rendu des photos.', groups: [
       { title: 'Thème', fields: [['apparence.theme', '', 'themes']] },
       { title: 'Clair / sombre', fields: [
-        ['apparence.modeParDefaut', 'Mode à l’ouverture du site', 'select', 'À la première visite. Ensuite, chaque invité garde son choix s’il utilise le commutateur.',
+        ['apparence.modeParDefaut', 'Mode à l’ouverture du site', 'select', 'Le site s’affiche toujours dans ce mode pour tous les invités.',
           [['dark', 'Sombre'], ['light', 'Clair'], ['auto', 'Selon le réglage de l’appareil']]],
-        ['apparence.afficherCommutateur', 'Afficher le commutateur clair / sombre aux invités', 'toggle',
-          'Désactivé : le site reste toujours dans le mode choisi ci-dessus.'],
       ] },
       { title: 'Photos', fields: [
         ['photos.noirEtBlanc', 'Afficher toutes les photos en noir et blanc', 'toggle',

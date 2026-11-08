@@ -17,25 +17,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:," data-favicon>
 <!-- Thèmes : un fichier par thème (variables seulement, très léger). Le thème actif est choisi par data-theme. -->
-<link rel="stylesheet" href="css/tokens.css?v=20261108d">
-<link rel="stylesheet" href="themes/noir-or.css?v=20261108d">
-<link rel="stylesheet" href="themes/bordeaux.css?v=20261108d">
-<link rel="stylesheet" href="themes/emeraude.css?v=20261108d">
-<link rel="stylesheet" href="themes/nuit-bleue.css?v=20261108d">
-<link rel="stylesheet" href="themes/ivoire.css?v=20261108d">
-<link rel="stylesheet" href="css/site.css?v=20261108d">
+<link rel="stylesheet" href="css/tokens.css?v=20261108e">
+<link rel="stylesheet" href="themes/noir-or.css?v=20261108e">
+<link rel="stylesheet" href="themes/bordeaux.css?v=20261108e">
+<link rel="stylesheet" href="themes/emeraude.css?v=20261108e">
+<link rel="stylesheet" href="themes/nuit-bleue.css?v=20261108e">
+<link rel="stylesheet" href="themes/ivoire.css?v=20261108e">
+<link rel="stylesheet" href="css/site.css?v=20261108e">
 <script>
-  // Anti-flash : applique le thème et le mode avant le premier rendu (dernière apparence vue + choix du visiteur).
+  // Anti-flash : applique le thème et le mode avant le premier rendu (dernière apparence vue).
   // Les valeurs définitives arrivent ensuite de Supabase (js/site.js → js/theme.js).
   (function () {
     var d = document.documentElement, a = null, m = null;
     if (/[?&]apercu=1/.test(location.search)) { d.classList.add('is-preview'); return; }
-    try { a = JSON.parse(localStorage.getItem('mb.apparence')); m = localStorage.getItem('mb.mode.site'); } catch (e) {}
+    try { a = JSON.parse(localStorage.getItem('mb.apparence')); } catch (e) {}
     if (!a) return;
     if (/^[a-z-]+$/.test(a.theme || '')) d.setAttribute('data-theme', a.theme);
-    if (!(a.afficherCommutateur !== false && (m === 'dark' || m === 'light'))) {
-      m = a.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : a.modeParDefaut;
-    }
+    m = a.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : a.modeParDefaut;
     if (m === 'dark' || m === 'light') d.setAttribute('data-mode', m);
   })();
 </script>
@@ -54,12 +52,6 @@
 <header class="topbar">
   <a href="#accueil" class="mono-link" aria-label="Retour en haut" data-mono></a>
   <div class="topbar-actions">
-    <!-- Commutateur clair / sombre (masquable par le couple dans l'admin) -->
-    <button class="mode-switch" type="button" role="switch" aria-checked="true" aria-label="Mode sombre" hidden>
-      <svg class="sw-sun" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="2.2"/><path d="M6 .6v1.6M6 9.8v1.6M.6 6h1.6M9.8 6h1.6M2.2 2.2l1.1 1.1M8.7 8.7l1.1 1.1M2.2 9.8l1.1-1.1M8.7 3.3l1.1-1.1"/></svg>
-      <svg class="sw-moon" viewBox="0 0 12 12" aria-hidden="true"><path d="M9.6 7.6A4.2 4.2 0 0 1 4.4 2.4a4.2 4.2 0 1 0 5.2 5.2Z"/></svg>
-      <span class="sw-knob"></span>
-    </button>
     <button class="burger" aria-label="Ouvrir le menu" aria-expanded="false"><span></span><span></span></button>
   </div>
 </header>
@@ -228,11 +220,11 @@
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="themes/index.js?v=20261108d"></script>
-<script src="js/theme.js?v=20261108d"></script>
-<script src="js/config.js?v=20261108d"></script>
-<script src="js/default-content.js?v=20261108d"></script>
-<script src="js/store.js?v=20261108d"></script>
-<script src="js/site.js?v=20261108d"></script>
+<script src="themes/index.js?v=20261108e"></script>
+<script src="js/theme.js?v=20261108e"></script>
+<script src="js/config.js?v=20261108e"></script>
+<script src="js/default-content.js?v=20261108e"></script>
+<script src="js/store.js?v=20261108e"></script>
+<script src="js/site.js?v=20261108e"></script>
 </body>
 </html>

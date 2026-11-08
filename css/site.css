@@ -184,28 +184,6 @@ body:has(.menu.open) .topbar::before { opacity: 0; }
 }
 .menu.open .menu-date { opacity: 1; transform: none; transition: opacity .8s var(--ease) .55s, transform .8s var(--ease) .55s; }
 
-/* ---------- Commutateur clair / sombre ---------- */
-/* Piste fine avec filet or, pastille qui glisse, soleil et lune très fins. role="switch" (js/theme.js). */
-.mode-switch {
-  --sw-w: 52px; --sw-h: 28px; --sw-knob: 20px;
-  position: relative; width: var(--sw-w); height: var(--sw-h); flex: none; padding: 0;
-  border-radius: 999px; border: 1px solid var(--c-line); background: transparent; color: var(--c-ink);
-  cursor: pointer; transition: border-color .3s;
-}
-.mode-switch[hidden] { display: none; }
-.mode-switch svg { position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; fill: none; stroke: currentColor; stroke-width: 1; opacity: .5; transition: opacity .3s; }
-.mode-switch .sw-sun { left: 7px; }
-.mode-switch .sw-moon { right: 7px; }
-.mode-switch .sw-knob {
-  position: absolute; top: 3px; left: 3px; width: var(--sw-knob); height: var(--sw-knob); border-radius: 50%;
-  background: var(--c-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-accent) 35%, transparent), 0 1px 6px rgba(0, 0, 0, .25);
-  transition: transform .3s var(--ease), background-color .3s;
-}
-.mode-switch[aria-checked="true"] .sw-knob { transform: translateX(calc(var(--sw-w) - var(--sw-knob) - 8px)); }
-.mode-switch[aria-checked="true"] .sw-sun, .mode-switch[aria-checked="false"] .sw-moon { opacity: .9; }
-.mode-switch:hover { border-color: var(--c-accent); }
-.mode-switch:focus-visible { outline: 1px solid var(--c-accent-soft); outline-offset: 3px; }
-
 /* ---------- Hero ---------- */
 .hero {
   min-height: 100vh; min-height: 100svh; display: grid; place-items: center; text-align: center;
@@ -504,7 +482,6 @@ html.is-preview .reveal.rv-img img { transform: none; }
   .topbar { --c-ink: var(--bar-ink); --c-accent: var(--bar-accent); --c-line: var(--bar-line); background-color: var(--bar-bg); }
   .topbar::before { opacity: 1; }
   .topbar-actions { gap: 10px; }
-  .mode-switch { --sw-w: 46px; --sw-h: 26px; --sw-knob: 18px; }
   .trio { grid-template-columns: 1fr 1fr; }
   .trio .frame-tall { grid-column: 1 / -1; grid-row: 1; }
   .trio .frame-tall img { aspect-ratio: 1; }

@@ -53,11 +53,6 @@
   burger.addEventListener('click', () => toggleMenu(!menu.classList.contains('open')));
   menuLinks.forEach(a => a.addEventListener('click', () => toggleMenu(false)));
 
-  // ---------- Commutateur clair / sombre ----------
-  // Sur le site, le choix du visiteur est mémorisé ; dans l'aperçu de l'admin, il ne l'est pas.
-  const modeSwitch = $('.mode-switch');
-  MBTheme.bindSwitch(modeSwitch, { scope: 'site', persist: !PREVIEW });
-
   // ---------- Visionneuse ----------
   const lb = $('.lightbox');
   $('.gallery').addEventListener('click', e => {
@@ -215,10 +210,9 @@
     };
     document.title = `${C.couple.prenom1} & ${C.couple.prenom2}${derived.dateLongue ? ` — ${derived.dateLongue}` : ''}`;
 
-    // ---------- Apparence : thème, mode, commutateur ----------
+    // ---------- Apparence : thème et mode choisis par le couple ----------
     const app = MBTheme.normalize(C.apparence);
     MBTheme.apply({ theme: app.theme, mode: MBTheme.resolveMode(app, 'site') }, { fade: PREVIEW });
-    modeSwitch.hidden = !app.afficherCommutateur;
     if (!PREVIEW) MBTheme.remember(app);
 
     // ---------- Textes et photos ----------

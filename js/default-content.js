@@ -94,7 +94,6 @@ window.MARIAGE_DEFAULT = {
   apparence: {
     theme: 'noir-or',
     modeParDefaut: 'dark',     // 'dark' | 'light' | 'auto' (selon l'appareil du visiteur)
-    afficherCommutateur: true,
   },
   // Apparence des photos : le noir et blanc n'est qu'un affichage, les fichiers d'origine restent en couleur
   photos: {

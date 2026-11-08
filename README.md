@@ -11,7 +11,7 @@ css/tokens.css          Contrat des design tokens (échelle typo, contextes nuit
 css/site.css            Composants du site — n'utilise que des variables
 themes/<id>.css         Un fichier par thème : couleurs (sombre + clair), polices
 themes/index.js         Catalogue des thèmes (cartes de la page Apparence)
-js/theme.js             Thème + mode, commutateur clair / sombre, mémorisation
+js/theme.js             Thème + mode, commutateur clair / sombre de l'admin
 js/default-content.js   Contenu par défaut = structure complète du contenu + bibliothèque de fonds
 js/store.js             Accès aux données (Supabase multi-couples ou mode démo)
 js/site.js              Rendu du site, compte à rebours, RSVP, calendrier, mode aperçu
@@ -54,7 +54,7 @@ Chaque couple ne voit que **son** contenu, **ses** invités, **ses** réponses e
 ## Fonctionnalités
 
 - **Thèmes** (page *Apparence*) : Noir & Or, Bordeaux, Émeraude, Nuit bleue, Ivoire — chacun en sombre et en clair, contrastes AA. Le back-office prend le thème du couple.
-- **Commutateur clair / sombre** dans l'en-tête du site et dans l'admin ; mode par défaut choisi par le couple ; commutateur masquable.
+- **Mode clair / sombre** choisi par le couple pour le site ; commutateur clair / sombre dans l'admin.
 - **Aperçu en direct** : le vrai site à droite de l'éditeur (mobile / tablette / bureau, sombre / clair), mis à jour à chaque frappe ; les photos ne sont envoyées qu'à l'enregistrement ; « Annuler les modifications » ; point focal des photos.
 - **Sections** : accueil + compte à rebours, notre histoire, programme, le grand jour, lieux, dress code, galerie, RSVP, footer — toutes masquables.
 - **RSVP** : présent / absent, nombre de personnes, enfants, accompagnants, moments, régime, chanson, questions personnalisées, message ; date limite ; liens invités (`?invite=…`).

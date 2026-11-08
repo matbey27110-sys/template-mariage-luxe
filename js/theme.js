@@ -5,11 +5,11 @@
 // - met en cache l'apparence pour que le script anti-flash du <head> l'applique avant le premier rendu.
 //
 // Réglages du couple, enregistrés dans Supabase avec le contenu :
-//   content.apparence = { theme: 'noir-or', modeParDefaut: 'dark' | 'light' | 'auto', afficherCommutateur: true }
+//   content.apparence = { theme: 'noir-or', modeParDefaut: 'dark' | 'light' | 'auto' }
 (function () {
   const root = document.documentElement;
   const THEMES = window.MB_THEMES || [];
-  const DEFAULT = { theme: 'noir-or', modeParDefaut: 'dark', afficherCommutateur: true };
+  const DEFAULT = { theme: 'noir-or', modeParDefaut: 'dark' };
   const KEY_CACHE = 'mb.apparence';                 // dernière apparence vue (pour le script anti-flash)
   const keyMode = scope => `mb.mode.${scope}`;       // choix du visiteur : 'site' ou 'admin'
 
@@ -24,15 +24,14 @@
     const a = { ...DEFAULT, ...(app || {}) };
     if (!THEMES.some(t => t.id === a.theme)) a.theme = DEFAULT.theme;
     if (!['dark', 'light', 'auto'].includes(a.modeParDefaut)) a.modeParDefaut = DEFAULT.modeParDefaut;
-    a.afficherCommutateur = a.afficherCommutateur !== false;
     return a;
   }
 
-  // Mode à afficher : choix mémorisé du visiteur (si le commutateur est proposé), sinon le défaut du couple
+  // Mode à afficher : site → toujours le mode choisi par le couple ; admin → choix mémorisé du commutateur, sinon ce défaut
   function resolveMode(app, scope) {
     const a = normalize(app);
     const saved = store.get(keyMode(scope));
-    if ((a.afficherCommutateur || scope === 'admin') && (saved === 'dark' || saved === 'light')) return saved;
+    if (scope === 'admin' && (saved === 'dark' || saved === 'light')) return saved;
     if (a.modeParDefaut === 'auto') return prefersDark() ? 'dark' : 'light';
     return a.modeParDefaut;
   }
@@ -86,7 +85,7 @@
   // Le site garde en cache l'apparence publiée : le script du <head> l'applique dès la visite suivante
   function remember(app) {
     const a = normalize(app);
-    store.set(KEY_CACHE, JSON.stringify({ theme: a.theme, modeParDefaut: a.modeParDefaut, afficherCommutateur: a.afficherCommutateur }));
+    store.set(KEY_CACHE, JSON.stringify({ theme: a.theme, modeParDefaut: a.modeParDefaut }));
   }
 
   window.MBTheme = { THEMES, DEFAULT, normalize, resolveMode, apply, bindSwitch, remember, findTheme, loadFonts };
