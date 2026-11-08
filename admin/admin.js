@@ -55,6 +55,12 @@
         ['histoire.photos', 'Trois photos (celle du milieu est mise en avant)', 'images', '', 3],
       ] },
     ] },
+    { id: 'programme', label: 'Programme', toggle: 'programme.active', hint: 'Le déroulé de la journée.', groups: [
+      { title: 'Titre', fields: [['programme.titre', 'Titre de la section', 'text']] },
+      { title: 'Étapes', fields: [['programme.items', '', 'list', '', [
+        ['heure', 'Heure', 'time'], ['titre', 'Titre', 'text'], ['description', 'Description', 'text'],
+      ], { heure: '', titre: 'Nouvelle étape', description: '' }]] },
+    ] },
     { id: 'grandJour', label: 'Le grand jour', toggle: 'grandJour.active', hint: 'Deuxième grande photo, entre le programme et les lieux.', groups: [
       { title: 'Photo plein écran', fields: [
         ['grandJour.surtitre', 'Petit titre', 'text'],
@@ -63,12 +69,6 @@
         ['grandJour.texte', 'Phrase', 'textarea'],
         ['grandJour.photo', 'Photo', 'image'],
       ] },
-    ] },
-    { id: 'programme', label: 'Programme', toggle: 'programme.active', hint: 'Le déroulé de la journée.', groups: [
-      { title: 'Titre', fields: [['programme.titre', 'Titre de la section', 'text']] },
-      { title: 'Étapes', fields: [['programme.items', '', 'list', '', [
-        ['heure', 'Heure', 'time'], ['titre', 'Titre', 'text'], ['description', 'Description', 'text'],
-      ], { heure: '', titre: 'Nouvelle étape', description: '' }]] },
     ] },
     { id: 'lieux', label: 'Lieux', toggle: 'lieux.active', hint: 'Adresses avec bouton « Itinéraire » automatique.', groups: [
       { title: 'Titre', fields: [['lieux.titre', 'Titre de la section', 'text']] },
@@ -117,6 +117,8 @@
         ['footer.photo', 'Photo de fond', 'image'],
       ] },
     ] },
+    // ----- Réglages hors sections du site (sous le séparateur) -----
+    { sep: true },
     { id: 'apparence', label: 'Apparence', hint: 'Thème du site, mode clair / sombre et rendu des photos.', groups: [
       { title: 'Thème', fields: [['apparence.theme', '', 'themes']] },
       { title: 'Clair / sombre', fields: [
@@ -128,7 +130,6 @@
           'S’applique à toutes les photos du site, y compris celles que vous importez. Désactivé, chaque photo suit son propre réglage (commutateur « Image en noir et blanc » sous chaque photo). Vos fichiers restent en couleur.'],
       ] },
     ] },
-    { sep: true },
     { id: 'invites', label: 'Invités', hint: 'Un lien personnel par invité : nom pré-rempli et nombre de places limité.' },
     { id: 'reponses', label: 'Réponses', hint: 'Toutes les réponses reçues.' },
   ];
