@@ -58,7 +58,7 @@
     const inner = b !== undefined
       ? `<g ${font} font-size='30'><text x='19' y='42'>${e(a)}</text><text x='45' y='42'>${e(b)}</text></g><rect x='31.5' y='18' width='1' height='27' fill='#C8A86B'/>`
       : `<text x='32' y='42' ${font} font-size='${String(initiales || '').length > 2 ? 20 : 28}'>${e(initiales)}</text>`;
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='#0B0A09'/>${inner}</svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='#000000'/>${inner}</svg>`;
     return 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
   function setFavicon(initiales) {

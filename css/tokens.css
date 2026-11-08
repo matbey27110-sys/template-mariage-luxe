@@ -1,0 +1,76 @@
+/* ============================================================
+   Design tokens — contrat commun du site invités et du back-office
+   ------------------------------------------------------------
+   Ce fichier ne contient AUCUNE couleur : il décrit la structure
+   (échelle typographique, espacements, rythme) et la façon dont
+   les couleurs d'un thème sont distribuées selon le contexte.
+
+   Les valeurs (couleurs, polices, grain…) viennent d'un fichier
+   de thème : themes/<id>.css, qui définit pour chaque mode
+   (data-mode="dark" | "light") les familles de tokens :
+     --nuit-*   sections principales (fond noir pur en mode sombre)
+     --jour-*   sections de respiration (lin / ivoire)
+     --photo-*  textes posés sur une photo voilée de noir
+     --bar-*    en-tête en verre fumé
+   Ajouter un thème = ajouter un fichier, sans toucher aux composants.
+   ============================================================ */
+:root {
+  /* Échelle typographique (ratio ≈ 1.5 entre niveaux) */
+  --t-micro: 10px;
+  --t-label: 11px;
+  --t-body: 16px;
+  --t-lead: clamp(17px, 1.7vw, 20px);
+  --t-h3: clamp(21px, 2.2vw, 26px);
+  --t-title: clamp(32px, 4.6vw, 56px);
+  --t-display: clamp(44px, 8vw, 112px);
+  --t-names: clamp(46px, 10vw, 136px);
+
+  /* Interlettrage */
+  --track-label: .32em;
+  --track-caps: .03em;
+
+  /* Rythme */
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --gutter: clamp(16px, 5vw, 64px);
+  --theme-fade: .3s; /* durée du passage clair ↔ sombre */
+}
+
+/* ------------------------------------------------------------
+   Contextes : chaque zone choisit sa famille de couleurs.
+   Les composants n'utilisent que les tokens --c-* ci-dessous,
+   ils s'adaptent donc tout seuls au thème, au mode et au fond.
+   ------------------------------------------------------------ */
+body, .dark, .menu, .lightbox {
+  --c-bg: var(--nuit-bg);
+  --c-surface: var(--nuit-surface);
+  --c-ink: var(--nuit-ink);
+  --c-ink-soft: var(--nuit-ink-soft);
+  --c-muted: var(--nuit-muted);
+  --c-accent: var(--nuit-accent);
+  --c-accent-soft: var(--nuit-accent-soft);
+  --c-line: var(--nuit-line);
+  --c-error: var(--nuit-error);
+  --c-on-accent: var(--nuit-on-accent);
+}
+.ivory {
+  --c-bg: var(--jour-bg);
+  --c-surface: var(--jour-surface);
+  --c-ink: var(--jour-ink);
+  --c-ink-soft: var(--jour-ink-soft);
+  --c-muted: var(--jour-muted);
+  --c-accent: var(--jour-accent);
+  --c-accent-soft: var(--jour-accent-soft);
+  --c-line: var(--jour-line);
+  --c-error: var(--jour-error);
+  --c-on-accent: var(--jour-on-accent);
+}
+/* Photos plein écran : toujours sous un voile noir, donc toujours des textes clairs */
+.hero, .fullbleed, .footer {
+  --c-ink: var(--photo-ink);
+  --c-ink-soft: var(--photo-ink-soft);
+  --c-muted: var(--photo-muted);
+  --c-accent: var(--photo-accent);
+  --c-accent-soft: var(--photo-accent-soft);
+  --c-line: var(--photo-line);
+  --c-on-accent: var(--photo-on-accent);
+}

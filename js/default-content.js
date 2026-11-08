@@ -64,7 +64,7 @@ window.MARIAGE_DEFAULT = {
     titre: 'Dress code',
     sousTitre: 'Black tie',
     texte: 'Smoking ou costume sombre pour ces messieurs, robe longue pour ces dames. Nous vous invitons à jouer avec ces teintes.',
-    couleurs: ['#0B0A09', '#5E0B12', '#C8A86B', '#E6CF9C', '#F4EDE2'],
+    couleurs: ['#000000', '#5E0B12', '#C8A86B', '#E6CF9C', '#F4EDE2'],
   },
   galerie: {
     active: true,
