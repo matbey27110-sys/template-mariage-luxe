@@ -1,30 +1,30 @@
 <!doctype html>
-<html lang="fr" data-theme="noir-or" data-mode="dark">
+<html lang="fr" data-theme="noir-or" data-mode="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#F4EDE2">
 <title>Espace mariés</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:slnt,wght@-14..14,100..1000&display=swap" rel="stylesheet">
 <!-- Le back-office prend le thème choisi par le couple : mêmes tokens et mêmes fichiers de thème que le site -->
-<link rel="stylesheet" href="../css/tokens.css?v=20261108l">
-<link rel="stylesheet" href="../themes/noir-or.css?v=20261108l">
-<link rel="stylesheet" href="../themes/bordeaux.css?v=20261108l">
-<link rel="stylesheet" href="../themes/emeraude.css?v=20261108l">
-<link rel="stylesheet" href="../themes/nuit-bleue.css?v=20261108l">
-<link rel="stylesheet" href="../themes/ivoire.css?v=20261108l">
-<link rel="stylesheet" href="admin.css?v=20261108l">
+<link rel="stylesheet" href="../css/tokens.css?v=20261108m">
+<link rel="stylesheet" href="../themes/noir-or.css?v=20261108m">
+<link rel="stylesheet" href="../themes/bordeaux.css?v=20261108m">
+<link rel="stylesheet" href="../themes/emeraude.css?v=20261108m">
+<link rel="stylesheet" href="../themes/nuit-bleue.css?v=20261108m">
+<link rel="stylesheet" href="../themes/ivoire.css?v=20261108m">
+<link rel="stylesheet" href="admin.css?v=20261108m">
 <script>
-  // Anti-flash : thème du couple (dernière apparence vue) + mode choisi dans l'admin, avant le premier rendu
+  // Anti-flash : thème du couple (dernière apparence vue) + mode de l'interface, avant le premier rendu.
+  // Interface : choix mémorisé du commutateur « Interface », sinon CLAIR (même règle que js/theme.js).
   (function () {
     var d = document.documentElement, a = null, m = null;
     try { a = JSON.parse(localStorage.getItem('mb.apparence')); m = localStorage.getItem('mb.mode.admin'); } catch (e) {}
     if (a && /^[a-z-]+$/.test(a.theme || '')) d.setAttribute('data-theme', a.theme);
-    if (m !== 'dark' && m !== 'light' && a) m = a.modeParDefaut === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : a.modeParDefaut;
-    if (m === 'dark' || m === 'light') d.setAttribute('data-mode', m);
+    d.setAttribute('data-mode', m === 'dark' || m === 'light' ? m : 'light');
   })();
 </script>
 </head>
@@ -114,11 +114,11 @@
 <input type="file" class="file-picker" accept="image/*" hidden>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="../themes/index.js?v=20261108l"></script>
-<script src="../js/theme.js?v=20261108l"></script>
-<script src="../js/config.js?v=20261108l"></script>
-<script src="../js/default-content.js?v=20261108l"></script>
-<script src="../js/store.js?v=20261108l"></script>
-<script src="admin.js?v=20261108l"></script>
+<script src="../themes/index.js?v=20261108m"></script>
+<script src="../js/theme.js?v=20261108m"></script>
+<script src="../js/config.js?v=20261108m"></script>
+<script src="../js/default-content.js?v=20261108m"></script>
+<script src="../js/store.js?v=20261108m"></script>
+<script src="admin.js?v=20261108m"></script>
 </body>
 </html>

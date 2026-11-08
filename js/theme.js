@@ -9,7 +9,8 @@
 (function () {
   const root = document.documentElement;
   const THEMES = window.MB_THEMES || [];
-  const DEFAULT = { theme: 'noir-or', modeParDefaut: 'dark' };
+  const DEFAULT = { theme: 'noir-or', modeParDefaut: 'dark' };  // réglages par défaut d'un nouveau couple (site)
+  const ADMIN_MODE = 'light';                                  // interface du back-office tant que rien n'est mémorisé
   const KEY_CACHE = 'mb.apparence';                 // dernière apparence vue (pour le script anti-flash)
   const keyMode = scope => `mb.mode.${scope}`;       // choix du visiteur : 'site' ou 'admin'
 
@@ -27,11 +28,14 @@
     return a;
   }
 
-  // Mode à afficher : site → toujours le mode choisi par le couple ; admin → choix mémorisé du commutateur, sinon ce défaut
+  // Mode à afficher : site → toujours le mode choisi par le couple ;
+  // admin → choix mémorisé du commutateur « Interface », sinon clair
   function resolveMode(app, scope) {
     const a = normalize(app);
-    const saved = store.get(keyMode(scope));
-    if (scope === 'admin' && (saved === 'dark' || saved === 'light')) return saved;
+    if (scope === 'admin') {
+      const saved = store.get(keyMode(scope));
+      return saved === 'dark' || saved === 'light' ? saved : ADMIN_MODE;
+    }
     if (a.modeParDefaut === 'auto') return prefersDark() ? 'dark' : 'light';
     return a.modeParDefaut;
   }
